@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Cockpit – Auftrag</title>{{template "css"}}
+{{if .Live}}<noscript><meta http-equiv="refresh" content="3"></noscript>{{end}}</head>
+<body>{{template "top" "jobs"}}
+<main>
+<div><a href="/jobs" style="font-size:13px;text-decoration:none">← Aufträge</a>
+<h1 style="margin:8px 0 0;font-size:26px;font-weight:600">{{.Label}} · {{.Job.Site}}</h1>
+<div style="margin-top:8px"><span id="st" class="badge {{.Class}}">{{.Status}}</span></div></div>
+<section class="card"><h2>Ablauf</h2><div class="pad"><dl class="kv">
+  <dt>Freigegeben von</dt><dd>{{.Job.ApprovedBy}}</dd>
+  <dt>Freigegeben</dt><dd class="mono">{{.Created}}</dd>
+  <dt>Gültig bis</dt><dd class="mono">{{.Expires}}</dd>
+  <dt>Gestartet</dt><dd class="mono">{{.Started}}</dd>
+  <dt>Beendet</dt><dd class="mono">{{.Finished}}</dd>
+  <dt>Exit-Code</dt><dd class="mono">{{with .Job.ExitCode}}{{.}}{{else}}–{{end}}</dd>
+  {{if .Job.Message}}<dt>Meldung des Agenten</dt><dd>{{.Job.Message}}</dd>{{end}}
+</dl>
+{{if .Live}}<form method="post" action="/jobs/{{.Job.ID}}/cancel" style="margin-top:16px"><button class="btn danger" type="submit">Abbrechen</button></form>{{end}}
+</div></section>
+<section class="card"><h2>Ausgabe</h2><div class="pad">
+<pre class="code" id="out"{{if .Live}} data-stream="/jobs/{{.Job.ID}}/stream?after={{.Last}}"{{end}} style="white-space:pre-wrap;word-break:break-word;min-height:3em">{{.Output}}</pre>
+{{if .Job.Truncated}}<p class="muted" style="margin:8px 0 0">Die Ausgabe war länger als erlaubt und ist hier gekürzt.</p>{{end}}
+</div></section>
+</main>
+{{if .Live}}<script nonce="{{.Nonce}}">
+(function () {
+  var out = document.getElementById('out'), st = document.getElementById('st');
+  if (!window.EventSource || !out.dataset.stream) return;
+  var es = new EventSource(out.dataset.stream);
+  es.addEventListener('out', function (e) {
+    var atEnd = window.innerHeight + window.scrollY >= document.body.scrollHeight - 40;
+    out.textContent += JSON.parse(e.data);
+    if (atEnd) window.scrollTo(0, document.body.scrollHeight);
+  });
+  es.addEventListener('status', function (e) {
+    var s = JSON.parse(e.data);
+    st.textContent = s.label;
+    st.className = 'badge ' + s.class;
+  });
+  es.addEventListener('end', function () { es.close(); location.reload(); });
+})();
+</script>{{end}}
+</body></html>

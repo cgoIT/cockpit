@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Cockpit – Token {{.ID}}</title>{{template "css"}}</head>
+<body>{{template "top" "agents"}}
+<main>
+<h1 style="margin:0;font-size:26px;font-weight:600">Token für {{.ID}}</h1>
+<div class="banner">Das Token wird nur jetzt angezeigt. Das Cockpit speichert nur den Hash. Seite nicht neu laden und nicht zurückgehen.</div>
+<section class="card"><h2>Lokale Datei auf dem Server (<span class="mono">bootstrap.json</span>, chmod 600)</h2><div class="pad">
+<pre class="code">{
+  "cockpit": "{{.Cockpit}}",
+  "agent": "{{.ID}}",
+  "token": "{{.Token}}",
+  "public_key": "{{.PublicKey}}",
+  "state": "/var/lib/cockpit-agent",
+  "roots": ["/var/www"]{{if .Jobs}},
+  "actions": []{{end}}
+}</pre>{{if .Jobs}}
+<p class="muted" style="font-size:13px"><span class="mono">actions</span> erlaubt Aufträge vom Cockpit, nur diese Aktionen und nur lokal: z. B. <span class="mono">["site-status", "maintenance-on", "maintenance-off"]</span> (alle Namen: README, Abschnitt „Aufträge“). Leer = der Agent fragt nie nach Aufträgen.</p>{{end}}
+<p class="muted" style="font-size:13px"><span class="mono">roots</span> legt fest, unter welchen Verzeichnissen der Agent Pfade aus dem Cockpit akzeptiert. Optional: <span class="mono">composer</span>, <span class="mono">php</span>, <span class="mono">nginx</span>, <span class="mono">mariadb</span> (Programme bleiben bewusst lokal).
+Start: <span class="mono">cockpit-agent -bootstrap bootstrap.json</span>. Der öffentliche Schlüssel prüft die Signatur der Konfiguration.</p>
+<a href="/agents/{{.ID}}">Weiter zur Konfiguration der Sites</a>
+</div></section>
+</main></body></html>

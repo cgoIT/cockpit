@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Cockpit – Agenten</title>{{template "css"}}</head>
+<body>{{template "top" "agents"}}
+<main>
+<h1 style="margin:0;font-size:26px;font-weight:600">Agenten</h1>
+{{if .Error}}<div class="banner">{{.Error}}</div>{{end}}
+<section class="card"><h2>Agenten (je Server einer)</h2>
+  <div class="scroll"><table style="min-width:0"><thead><tr><th>Agent</th><th>Sites</th><th>Konfiguration zuletzt abgeholt</th></tr></thead><tbody>
+  {{range .Agents}}<tr><td><a href="/agents/{{.ID}}" class="mono">{{.ID}}</a></td><td class="mono">{{.Sites}}</td><td>{{.Fetched}}</td></tr>
+  {{else}}<tr><td colspan="3" class="muted">Noch kein Agent angelegt.</td></tr>{{end}}
+  </tbody></table></div>
+</section>
+<section class="card"><h2>Neuen Agenten anlegen</h2><div class="pad">
+  <form method="post" action="/agents" class="inline"><label class="f" style="max-width:360px">ID (a-z, 0-9, -)<input name="id" required pattern="[a-z0-9-]+"></label>
+  <p class="muted" style="font-size:13px">Danach wird das Token einmalig angezeigt, zusammen mit der lokalen Datei für den Agenten.</p>
+  <button class="btn primary" type="submit">Anlegen</button></form>
+</div></section>
+</main></body></html>

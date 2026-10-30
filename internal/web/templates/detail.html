@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Cockpit – {{.R.Site.Name}}</title>{{template "css"}}</head>
+<body>{{template "top" "overview"}}
+<main>
+<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:16px">
+<div>
+  <a href="/" style="font-size:13px;text-decoration:none">← Alle Sites</a>
+  <h1 style="margin:8px 0 0;font-size:26px;font-weight:600">{{.R.Site.Name}} <span class="badge {{.Status.Level}}" style="vertical-align:middle">{{.Status.Icon}} {{.Status.Label}}</span></h1>
+  <div class="sub" style="margin-top:4px">{{.R.Site.URL}} · Host {{.R.Host.Name}} · letzte Meldung {{.Seen}} · Agent {{.R.Agent.Type}} {{.R.Agent.Version}}</div>
+  {{if .Status.Reasons}}<ul class="reasons">{{range .Status.Reasons}}<li>{{.}}</li>{{end}}</ul>{{end}}
+</div>
+{{if .Days}}<form method="get" class="hist"><label>Historische Werte anzeigen <select name="day">{{range .Days}}<option value="{{.Value}}"{{if .Selected}} selected{{end}}>{{.Label}}</option>{{end}}</select></label> <button type="submit">Anzeigen</button></form>{{end}}
+</div>
+{{if .Day}}<div class="banner" style="background:#E3ECFA;border-color:#1B4A99;color:#12326B">Tagesstand vom {{.DayLabel}} (gemeldet {{fmtTime .R.CollectedAt}}). <a href="?">Zum aktuellen Stand</a></div>{{end}}
+{{range .R.Site.Advisories}}
+<div class="banner"><strong>■ Sicherheitshinweis</strong> {{.Package}}: {{.Title}} {{if .CVE}}<span class="mono">({{.CVE}})</span>{{end}}</div>
+{{end}}
+<section class="card"><h2>Trend <span class="muted" style="font-weight:400">· letzte {{.Trend.Label}}</span>
+  <span class="ranges">{{range .Trend.Ranges}}<a href="?range={{.Days}}"{{if eq .Days $.Trend.Days}} class="on"{{end}}>{{.Label}}</a>{{end}}</span></h2>
+  <div class="pad">
+    <div class="muted" style="font-size:12px;margin-bottom:4px">Status</div>
+    {{if .Trend.Band}}<svg class="band" viewBox="0 0 {{.Trend.W}} {{.Trend.BandH}}" preserveAspectRatio="none" role="img" aria-label="Statusverlauf"><title>Statusverlauf</title>{{range .Trend.Band}}<rect x="{{printf "%.1f" .X}}" y="0" width="{{printf "%.1f" .W}}" height="{{$.Trend.BandH}}" class="lv{{.Level}}"/>{{end}}</svg>
+    <div class="legend"><span class="lv0 sw"></span> OK <span class="lv1 sw"></span> Warnung <span class="lv2 sw"></span> Kritisch <span class="lv3 sw"></span> Keine Meldung</div>
+    {{else}}<div class="muted">Keine Daten im Zeitraum.</div>{{end}}
+    <div class="charts">
+    {{range .Trend.Charts}}<div class="chart"><div class="chead"><span class="muted">{{.Title}}</span><span class="mono val">{{.Last}}</span></div>
+      <div class="mono muted mm">min {{.Min}} · max {{.Max}}</div>
+      <div class="plot"><div class="ylab"><span>{{.YTop}}</span><span>{{.YMid}}</span><span>0</span></div>
+      <svg viewBox="0 0 {{$.Trend.W}} {{$.Trend.H}}" preserveAspectRatio="none" role="img" aria-label="{{.Title}}"><title>{{.Title}}</title><path class="grid" d="M0,2H600M0,40H600M0,78H600"/><path d="{{.Path}}"/></svg></div>
+      <div class="xlab">{{range $.Trend.XLabels}}<span>{{.}}</span>{{end}}</div>
+    </div>{{end}}
+    </div>
+  </div></section>
+<div class="grid2">
+  <div class="col-a">
+    <section class="card"><h2>Stack</h2><div class="pad"><dl class="kv">
+      <dt>Contao</dt><dd class="mono">{{if .R.Site.Contao}}{{.R.Site.Contao}}{{else}}–{{end}}</dd>
+      <dt>PHP</dt><dd class="mono">{{if .R.Site.PHP}}{{.R.Site.PHP}}{{else}}–{{end}}</dd>
+      <dt>MariaDB</dt><dd class="mono">{{if .R.Host.MariaDB}}{{.R.Host.MariaDB}}{{else}}–{{end}}</dd>
+      <dt>nginx</dt><dd class="mono">{{if .R.Host.Nginx}}{{.R.Host.Nginx}}{{else}}–{{end}}</dd>
+      <dt>Speicherplatz frei</dt><dd class="mono">{{if .R.Host.DiskFreePct}}{{.R.Host.DiskFreePct}} %{{else}}–{{end}}</dd>
+      <dt>TLS läuft ab</dt><dd class="mono">{{if .R.Site.TLSExpires}}{{fmtDate .R.Site.TLSExpires}}{{else}}–{{end}}</dd>
+      <dt>Letztes Backup</dt><dd class="mono">{{if .R.Site.LastBackup}}{{fmtTime .R.Site.LastBackup}}{{else}}–{{end}}</dd>
+      <dt>Backups (Treffer)</dt><dd class="mono">{{if .R.Site.BackupCount}}{{.R.Site.BackupCount}}{{else}}–{{end}}</dd>
+      <dt>Letzter Cron-Lauf</dt><dd class="mono">{{if .R.Site.CronLastRun}}{{fmtTime .R.Site.CronLastRun}}{{else}}–{{end}}</dd>
+      <dt>Offene Migrationen</dt><dd class="mono">{{if .R.Site.PendingMigrations}}{{.R.Site.PendingMigrations}}{{else}}–{{end}}</dd>
+      <dt>Wartungsmodus</dt><dd class="mono">{{.Maintenance}}</dd>
+      <dt>Pakete insgesamt</dt><dd class="mono">{{.R.Site.PackagesTotal}}</dd>
+    </dl></div></section>
+    {{if .Trend.Changes}}<section class="card"><h2>Versionswechsel</h2><div class="pad"><dl class="kv">
+      {{range .Trend.Changes}}<dt>{{fmtDate .At}} · {{.Product}}</dt><dd class="mono">{{.From}} → {{.To}}</dd>{{end}}
+    </dl></div></section>{{end}}
+    {{if .R.Site.Problems}}<section class="card"><h2>Nicht ermittelt</h2><div class="pad"><ul class="reasons" style="margin:0">{{range .R.Site.Problems}}<li>{{.}}</li>{{end}}</ul></div></section>{{end}}
+    <section class="card"><h2>Verlauf</h2><div class="scroll"><table style="min-width:0">
+      <thead><tr><th>Erstellt</th><th>Updates</th><th>Fehler</th></tr></thead><tbody>
+      {{range .History}}<tr><td class="mono">{{fmtTime .At}}</td><td class="mono">{{.OpenUpdates}}</td><td class="mono">{{.Errors}}</td></tr>{{end}}
+      </tbody></table></div></section>
+  </div>
+  <div class="col-b">
+    <section class="card"><h2>Pakete mit Updates <span class="muted" style="font-weight:400">· {{.OpenUpdates}} offen von {{.R.Site.PackagesTotal}}</span></h2>
+      <div class="scroll"><table><thead><tr><th>Paket</th><th>Installiert</th><th>Verfügbar</th><th>Hinweis</th></tr></thead><tbody>
+      {{range .Packages}}<tr><td class="mono">{{.Name}}</td><td class="mono">{{.Installed}}</td><td class="mono">{{.Latest}}</td>
+        <td><span class="badge {{.Class}}">{{.Label}}</span>{{if .Abandoned}} <span class="badge warn">▲ aufgegeben</span>{{end}}</td></tr>
+      {{else}}<tr><td colspan="4" class="muted">Keine offenen Updates.</td></tr>{{end}}
+      </tbody></table></div></section>
+    {{if .Ignored}}<section class="card"><details><summary style="cursor:pointer;padding:16px 20px;font-size:16px;font-weight:600">Ausgeschlossene Updates <span class="muted" style="font-weight:400">· {{len .Ignored}}</span></summary>
+      <div class="scroll"><table><thead><tr><th>Paket</th><th>Installiert</th><th>Verfügbar</th><th>Hinweis</th></tr></thead><tbody>
+      {{range .Ignored}}<tr><td class="mono">{{.Name}}</td><td class="mono">{{.Installed}}</td><td class="mono">{{.Latest}}</td><td><span class="badge off">{{.Label}}</span></td></tr>{{end}}
+      </tbody></table></div></details></section>{{end}}
+    <section class="card"><h2>Letzte Fehler <span class="muted" style="font-weight:400">· gruppiert, neueste zuerst</span></h2>
+      <div class="scroll"><table><thead><tr><th>Zeit</th><th>Level</th><th>Meldung</th><th>Anzahl</th></tr></thead><tbody>
+      {{range .R.Errors}}<tr><td class="mono">{{fmtTime .Time}}</td><td style="font-weight:500">{{.Level}}</td><td class="mono" style="font-size:13px">{{.Message}}</td><td class="mono">{{.Count}}×</td></tr>
+      {{else}}<tr><td colspan="4" class="muted">Keine Fehler im Zeitfenster.</td></tr>{{end}}
+      </tbody></table></div></section>
+  </div>
+</div>
+</main></body></html>

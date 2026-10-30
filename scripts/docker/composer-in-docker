@@ -1,0 +1,10 @@
+#!/bin/sh
+# Beispiel, ungetestet: führt composer im php-Container einer Docker-Compose-Site aus.
+# SITE_DIR = absoluter Pfad des Site-Verzeichnisses (dort liegt compose.yml); der Agent übergibt ihn per Umgebung.
+set -eu
+c=$(docker ps -q --filter "label=com.docker.compose.project.working_dir=${SITE_DIR:?SITE_DIR fehlt}" \
+  --filter "label=com.docker.compose.service=php" | head -n1)
+[ -n "$c" ] || { echo "php-Container für $SITE_DIR nicht gefunden" >&2; exit 1; }
+# Arbeitsverzeichnis des Agenten (-path) auf den Mount im Container abbilden; sonst Projektwurzel.
+case "$PWD/" in "$SITE_DIR/webroot/"*) rel=${PWD#"$SITE_DIR/webroot"} ;; *) rel= ;; esac
+exec docker exec -i -w "/var/www/html$rel" "$c" composer "$@"

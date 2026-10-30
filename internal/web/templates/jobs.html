@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Cockpit – Aufträge</title>{{template "css"}}</head>
+<body>{{template "top" "jobs"}}
+<main>
+{{if .Error}}<div class="banner">{{.Error}}</div>{{end}}
+<section class="card"><h2>Neuer Auftrag</h2><div class="pad">
+{{if .Sites}}
+<div class="scroll"><table>
+  <thead><tr><th>Site</th><th>Anzeigen (ein Klick)</th><th>Ändern (mit Bestätigung)</th><th>Mit Site-ID bestätigen</th></tr></thead>
+  <tbody>{{range .Sites}}{{$site := .ID}}<tr><td>{{.ID}}<div class="sub">{{.Agent}} · {{.Kind}}</div></td>
+    <td>{{range .Read}}<form method="post" action="/jobs" style="display:inline"><input type="hidden" name="site" value="{{$site}}"><input type="hidden" name="action" value="{{.Name}}"><button class="btn" type="submit" style="margin:0 6px 6px 0">{{.Label}}</button></form>{{end}}</td>
+    <td>{{range .Change}}<a class="btn" style="text-decoration:none;display:inline-block;margin:0 6px 6px 0" href="/jobs/new?site={{$site}}&amp;action={{.Name}}">{{.Label}}</a>{{end}}</td>
+    <td>{{range .Critical}}<a class="btn danger" style="text-decoration:none;display:inline-block;margin:0 6px 6px 0" href="/jobs/new?site={{$site}}&amp;action={{.Name}}">{{.Label}}</a>{{end}}{{if not .Any}}<span class="muted">keine angeboten (Agent nicht erreichbar, Auftragskanal aus oder für die Site nichts freigegeben)</span>{{end}}</td></tr>{{end}}</tbody>
+</table></div>
+<p class="muted" style="margin:12px 0 0">Angeboten wird, was der Agent selbst als erlaubt meldet (<code>actions</code> in seiner lokalen <code>bootstrap.json</code>) <em>und</em> was auf der Agentenseite für die Site freigegeben ist. Danach folgt eine Bestätigung.</p>
+{{else}}<p class="muted" style="margin:0">Keine Site eines Agenten vorhanden (Art contao oder php). Sites trägst du unter „Agenten“ ein.</p>{{end}}
+</div></section>
+<section class="card"><h2>Zuletzt</h2>
+<div class="scroll"><table>
+  <thead><tr><th>Zeit</th><th>Site</th><th>Aktion</th><th>Freigegeben von</th><th>Status</th></tr></thead>
+  <tbody>{{range .Rows}}
+  <tr><td class="mono"><a href="/jobs/{{.ID}}">{{.Created}}</a></td><td>{{.Site}}</td><td>{{.Label}}</td><td>{{.By}}</td><td><span class="badge {{.Class}}">{{.Status}}</span></td></tr>
+  {{else}}<tr><td colspan="5" class="muted">Noch keine Aufträge.</td></tr>{{end}}</tbody>
+</table></div></section>
+</main></body></html>

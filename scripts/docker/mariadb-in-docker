@@ -1,0 +1,8 @@
+#!/bin/sh
+# Beispiel, ungetestet: führt mariadb im db-Container (MariaDB) einer Docker-Compose-Site aus (für `mariadb --version`).
+# SITE_DIR = absoluter Pfad des Site-Verzeichnisses (dort liegt compose.yml); der Agent übergibt ihn per Umgebung.
+set -eu
+c=$(docker ps -q --filter "label=com.docker.compose.project.working_dir=${SITE_DIR:?SITE_DIR fehlt}" \
+  --filter "label=com.docker.compose.service=db" | head -n1)
+[ -n "$c" ] || { echo "db-Container für $SITE_DIR nicht gefunden" >&2; exit 1; }
+exec docker exec "$c" mariadb "$@"

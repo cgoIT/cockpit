@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Cockpit – Auftrag bestätigen</title>{{template "css"}}</head>
+<body>{{template "top" "jobs"}}
+<main>
+<div><a href="/jobs" style="font-size:13px;text-decoration:none">← Aufträge</a>
+<h1 style="margin:8px 0 0;font-size:26px;font-weight:600">{{.Action.Label}}</h1></div>
+{{if .Error}}<div class="banner">{{.Error}}</div>{{end}}
+<section class="card"><h2>Bitte bestätigen</h2><div class="pad">
+<dl class="kv"><dt>Site</dt><dd class="mono">{{.Site}}</dd><dt>Agent</dt><dd class="mono">{{.Agent}}</dd><dt>Aktion</dt><dd>{{.Action.Label}}</dd></dl>
+<p class="muted">Der signierte Auftrag gilt {{.Minutes}} Minuten ab Freigabe. Holt der Agent ihn bis dahin nicht ab, verfällt er. Die Ausgabe siehst du danach live.</p>
+<form method="post" action="/jobs" style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end">
+  <input type="hidden" name="site" value="{{.Site}}"><input type="hidden" name="action" value="{{.Action.Name}}">
+  {{if .Action.NeedsID}}<label class="f">Zur Bestätigung die Site-ID eintragen<input name="confirm" autocomplete="off" placeholder="{{.Site}}" required></label>{{end}}
+  <button class="btn primary" type="submit">Freigeben und ausführen</button>
+  <a class="btn" href="/jobs" style="text-decoration:none">Abbrechen</a>
+</form>
+</div></section>
+</main></body></html>

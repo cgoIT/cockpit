@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Cockpit – Agent {{.Agent.ID}}</title>{{template "css"}}</head>
+<body>{{template "top" "agents"}}
+<main>
+<div><a href="/agents" style="font-size:13px;text-decoration:none">← Alle Agenten</a>
+<h1 style="margin:8px 0 0;font-size:26px;font-weight:600">Agent {{.Agent.ID}}</h1>
+<div class="sub" style="margin-top:4px">Konfiguration zuletzt abgeholt: {{.Fetched}}</div>
+{{if hasJobs}}<div class="sub" style="margin-top:2px">Auftragskanal: {{.Channel}}. Die Erlaubnis steht nur lokal in der <span class="mono">bootstrap.json</span> (<span class="mono">actions</span>).</div>{{end}}</div>
+{{if .Error}}<div class="banner">{{.Error}}</div>{{end}}
+<form method="post" action="/agents/{{.Agent.ID}}">
+<input type="hidden" name="count" value="{{.Count}}">
+<section class="card"><h2>Allgemein</h2><div class="pad"><div class="fgrid">
+  <label class="f">Intervall (z. B. 5m, mindestens 30s; leer = 5m)<input name="interval" value="{{.Interval}}"></label>
+</div></div></section>
+<section class="card"><h2>Sites</h2><div class="pad">
+{{range .Sites}}<fieldset class="site"><legend>{{if .ID}}{{.ID}}{{else}}Neue Site (leer lassen = keine){{end}}</legend>
+  <div class="fgrid">
+    <label class="f">ID<input name="s{{.N}}_id" value="{{.ID}}" pattern="[a-z0-9-]*"></label>
+    <label class="f">Anzeigename<input name="s{{.N}}_name" value="{{.Name}}"></label>
+    <label class="f">Art<select name="s{{.N}}_kind">{{$k := .Kind}}{{range $o := kinds}}<option{{if eq $o $k}} selected{{end}}>{{$o}}</option>{{end}}</select></label>
+    <label class="f">URL<input name="s{{.N}}_url" value="{{.URL}}"></label>
+    <label class="f">Projektverzeichnis (absolut)<input name="s{{.N}}_path" value="{{.Path}}"></label>
+    <label class="f">Backup-Verzeichnis<input name="s{{.N}}_backup_dir" value="{{.BackupDir}}"></label>
+    <label class="f">Backup-Dateimaske<input name="s{{.N}}_backup_glob" value="{{.BackupGlob}}" placeholder="*"></label>
+    <label class="f">SITE_DIR (Docker-Wrapper)<input name="s{{.N}}_site_dir" value="{{.SiteDir}}"></label>
+    <label class="f">Updates ausschließen (eine Regel je Zeile)<textarea name="s{{.N}}_ignore" rows="2">{{.Ignore}}</textarea></label>
+  </div>
+  {{if .Actions}}{{$n := .N}}<div style="margin-top:10px"><div class="sub">Aufträge für diese Site (Freigabe; angeboten wird nur, was zusätzlich der Agent lokal erlaubt)</div>
+    <div style="display:flex;gap:6px 18px;flex-wrap:wrap;margin-top:4px">{{range .Actions}}<label class="chk"><input type="checkbox" name="s{{$n}}_act" value="{{.Name}}"{{if .On}} checked{{end}}> {{.Label}}{{if not .Reported}} <span class="muted">(nicht gemeldet)</span>{{end}}</label>{{end}}</div></div>{{end}}
+  <div style="margin-top:10px;display:flex;gap:18px;flex-wrap:wrap">
+    <label class="chk"><input type="checkbox" name="s{{.N}}_host" value="1"{{if .Host}} checked{{end}}> Host-Infos mit erfassen</label>
+    <label class="chk"><input type="checkbox" name="s{{.N}}_no_nginx" value="1"{{if .NoNginx}} checked{{end}}> hat keinen nginx</label>
+    <label class="chk"><input type="checkbox" name="s{{.N}}_no_mariadb" value="1"{{if .NoMariaDB}} checked{{end}}> hat keine Datenbank</label>
+    {{if .ID}}<label class="chk"><input type="checkbox" name="s{{.N}}_delete" value="1"> Site entfernen</label>{{end}}
+  </div></fieldset>{{end}}
+  <button class="btn primary" type="submit">Speichern</button>
+  <span class="muted" style="font-size:13px"> Der Agent übernimmt Änderungen beim nächsten Lauf. Zum Anlegen weiterer Sites speichern und die Seite neu öffnen.</span>
+</div></section>
+</form>
+<section class="card"><h2>Konfiguration, die der Agent erhält</h2><div class="pad">
+  <pre class="code">{{.Preview}}</pre>
+  <p class="muted" style="font-size:13px">Gespeicherter Stand, nicht die Eingaben im Formular oben. Der Agent bekommt dies signiert, mit Agent <span class="mono">{{.Agent.ID}}</span>, ausgestellt bei jedem Abruf (jetzt: {{fmtTime .Now}}) und gültig {{.TTLDays}} Tage (bis {{fmtDate .Expires}}). Token, Programme, <span class="mono">roots</span> und <span class="mono">state</span> stehen nur in der lokalen <span class="mono">bootstrap.json</span> und sind hier nicht enthalten.</p>
+</div></section>
+<section class="card"><h2>Token und Löschen</h2><div class="pad" style="display:flex;gap:12px;flex-wrap:wrap">
+  <form method="post" action="/agents/{{.Agent.ID}}/rotate"><button class="btn" type="submit">Token erneuern (das alte wird ungültig)</button></form>
+  <form method="post" action="/agents/{{.Agent.ID}}/delete"><label class="chk"><input type="checkbox" name="confirm" value="1" required> Löschen bestätigen</label> <button class="btn danger" type="submit">Agent löschen</button></form>
+</div></section>
+</main></body></html>

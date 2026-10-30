@@ -1,0 +1,78 @@
+{{define "css"}}
+<style>
+:root{--ink:#1B2430;--muted:#55606E;--line:#DDE1E7;--bg:#F4F5F7;--accent:#1F5FBF}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif}
+a{color:var(--accent)}
+header.top{display:flex;flex-wrap:wrap;align-items:center;gap:16px;padding:16px 32px;background:#fff;border-bottom:1px solid var(--line)}
+header.top .brand{font-size:18px;font-weight:600}
+header.top nav a{padding:10px 14px;border-radius:6px;color:#3B4654;text-decoration:none}
+header.top nav a.on{background:#E8EFFA;color:#174A94;font-weight:500}
+main{max-width:1360px;margin:0 auto;padding:24px 32px 40px;display:flex;flex-direction:column;gap:24px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px}
+.tile{background:#fff;border:1px solid var(--line);border-radius:8px;padding:16px 20px}
+.tile.crit{border:2px solid #B3261E;padding:15px 19px}
+.tile .k{color:var(--muted);font-size:13px}
+.tile .v{font-size:32px;font-weight:600;margin-top:4px}
+.tile .s{color:var(--muted);font-size:12px;margin-top:4px}
+section.card{background:#fff;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+section.card h2{margin:0;padding:16px 20px;font-size:16px;font-weight:600;border-bottom:1px solid var(--line)}
+section.card .pad{padding:16px 20px}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:760px}
+th{background:var(--bg);color:var(--muted);font-size:12px;font-weight:500;text-transform:uppercase;letter-spacing:.04em;text-align:left;padding:12px 20px}
+td{padding:14px 20px;border-top:1px solid #E6E9ED;vertical-align:baseline}
+td.mono{white-space:nowrap}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+.sub{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:12px;color:var(--muted)}
+.badge{display:inline-block;padding:4px 10px;border-radius:4px;font-weight:500;font-size:13px}
+.badge.ok{background:#E4F3EA;color:#14612F}
+.badge.warn{background:#FBEFD2;color:#6B4600}
+.badge.crit{background:#FBE4E2;color:#8F1C16}
+.badge.info{background:#E3ECFA;color:#1B4A99}
+.badge.off{background:#ECEEF1;color:var(--muted)}
+.badge.maint{border:1px solid var(--muted);color:#3B4654;font-size:12px;padding:3px 8px;margin-left:6px}
+.reasons{margin:6px 0 0;padding-left:18px;color:#3B4654;font-size:13px}
+dl.kv{margin:0;display:grid;grid-template-columns:1fr auto;gap:10px 16px}
+dl.kv dt{color:var(--muted)} dl.kv dd{margin:0}
+.banner{padding:14px 18px;border:1px solid #B3261E;border-radius:8px;background:#FBE4E2;color:#5E100C}
+.grid2{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start}
+.grid2>.col-a{flex:1 1 320px;min-width:0;display:flex;flex-direction:column;gap:24px}
+.grid2>.col-b{flex:999 1 560px;min-width:0;display:flex;flex-direction:column;gap:24px}
+.muted{color:var(--muted)}
+.tr{font-size:12px;margin-left:2px;white-space:nowrap}.tr.bad{color:#B3261E}.tr.good{color:#14612F}
+section.card h2 .ranges{float:right;font-size:13px;font-weight:400}
+.ranges a{margin-left:12px;text-decoration:none;color:var(--muted)}.ranges a.on{color:var(--accent);font-weight:600}
+.charts{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px 24px;margin-top:16px}
+.chart .chead{display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-size:12px}.chart .val{font-size:15px;font-weight:500;color:var(--ink)}.chart .mm{font-size:12px;white-space:nowrap;text-align:right}
+.plot{display:flex;gap:6px;margin-top:4px}.ylab{display:flex;flex-direction:column;justify-content:space-between;min-width:52px;text-align:right;font-size:11px;color:var(--muted);height:60px;white-space:nowrap}
+.plot svg{flex:1;min-width:0;height:60px;display:block;background:var(--bg);border-radius:4px}
+.xlab{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin:4px 0 0 58px}
+.chart path.grid{stroke:#DDE1E7;stroke-width:1;stroke-dasharray:3 3}
+.chart path:not(.grid){fill:none;stroke:#1F5FBF;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+svg.band{width:100%;height:14px;display:block;border-radius:3px;overflow:hidden;background:var(--bg)}
+.lv0{fill:#4CAF7A;background:#4CAF7A}.lv1{fill:#E3A008;background:#E3A008}.lv2{fill:#B3261E;background:#B3261E}.lv3{fill:#B8BEC7;background:#B8BEC7}
+.legend{font-size:12px;color:var(--muted);margin-top:4px}.legend .sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin:0 3px 0 10px;vertical-align:-1px}.legend .sw:first-child{margin-left:0}
+form.hist{font-size:13px;color:var(--muted);margin-top:4px}form.hist input,form.hist select,form.hist button{font:inherit;padding:6px 10px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink)}form.hist button{cursor:pointer}form.hist button:hover{background:var(--bg)}
+header.top form.logout{margin:0 0 0 auto}
+header.top form.logout button{font:inherit;padding:8px 14px;border:1px solid var(--line);border-radius:6px;background:#fff;color:#3B4654;cursor:pointer}
+header.top form.logout button:hover{background:var(--bg)}
+.fgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px 16px}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}
+label.f input,label.f select,label.f textarea,form.inline input{font:inherit;font-size:14px;color:var(--ink);padding:7px 10px;border:1px solid var(--line);border-radius:6px;background:#fff}
+label.chk{display:inline-flex;gap:6px;align-items:center;font-size:13px;color:var(--ink)}
+.btn{font:inherit;padding:8px 14px;border:1px solid var(--line);border-radius:6px;background:#fff;color:#3B4654;cursor:pointer}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.danger{color:#8F1C16}
+fieldset.site{border:1px solid var(--line);border-radius:8px;padding:12px 16px;margin:0 0 16px}
+fieldset.site legend{font-size:13px;font-weight:600;padding:0 6px}
+pre.code{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:12px 16px;overflow-x:auto;font:13px/1.5 "IBM Plex Mono",ui-monospace,monospace;margin:0}
+table.matrix{min-width:0}
+td.cell,table.matrix th:not(:first-child){text-align:center}
+td.cell.warn{background:#FBEFD2;color:#6B4600}
+td.cell.crit{background:#FBE4E2;color:#8F1C16}
+</style>
+{{end}}
+{{define "top"}}
+<header class="top"><div class="brand">Cockpit</div><nav><a href="/"{{if eq . "overview"}} class="on"{{end}}>Übersicht</a>{{if hasAgents}}<a href="/agents"{{if eq . "agents"}} class="on"{{end}}>Agenten</a>{{end}}{{if hasJobs}}<a href="/jobs"{{if eq . "jobs"}} class="on"{{end}}>Aufträge</a>{{end}}</nav>{{if hasLogin}}<form method="post" action="/logout" class="logout"><button type="submit">Abmelden</button></form>{{end}}</header>
+{{end}}

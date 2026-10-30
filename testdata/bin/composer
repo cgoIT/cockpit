@@ -1,0 +1,8 @@
+#!/bin/sh
+# DEMO-STUB: ersetzt composer in der Beispielumgebung. Liefert Daten aus ./.demo/*.json der Site.
+case "$1" in
+  outdated) cat .demo/outdated.json 2>/dev/null || echo '{"installed":[]}' ;;
+  audit)
+    if [ -s .demo/audit.json ]; then cat .demo/audit.json; exit 1; else echo '{"advisories":[]}'; fi ;;
+  *) echo "stub: nicht unterstuetzt" >&2; exit 2 ;;
+esac

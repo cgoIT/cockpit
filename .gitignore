@@ -1,0 +1,11 @@
+/bin/
+/data/
+/tokens.json
+*.test
+*.bak
+/.idea
+
+.env.local
+/token-*.txt
+/config.json
+*.config.json

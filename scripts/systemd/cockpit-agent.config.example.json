@@ -1,0 +1,21 @@
+{
+  "cockpit": "https://cockpit.example",
+  "interval": "5m",
+  "spool": "/var/lib/cockpit-agent",
+  "composer": "/opt/cockpit/composer-in-docker",
+  "php": "/opt/cockpit/php-in-docker",
+  "nginx": "/opt/cockpit/nginx-in-docker",
+  "mariadb": "/opt/cockpit/mariadb-in-docker",
+  "sites": [
+    {"id": "host-server1", "name": "Host Server1", "kind": "host", "token": "TOKEN-1", "path": "/appl"},
+    {"id": "beispiel-php", "name": "beispiel-php", "kind": "php", "url": "https://php.example",
+     "path": "/srv/websites/sites/beispiel-php/webroot",
+     "env": {"SITE_DIR": "/srv/websites/sites/beispiel-php"}, "token": "TOKEN-2"},
+    {"id": "beispiel-contao", "name": "Beispiel Contao", "kind": "contao", "url": "https://example.org",
+     "path": "/srv/websites/sites/beispiel-contao/webroot",
+     "backup_dir": "/srv/websites/sites/beispiel-contao/backups",
+     "env": {"SITE_DIR": "/srv/websites/sites/beispiel-contao"}, "host": true,
+     "ignore_updates": ["contao/*:6.*"],
+     "token_file": "/etc/cockpit-agent/beispiel-contao.token"}
+  ]
+}
