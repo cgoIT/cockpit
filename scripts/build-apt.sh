@@ -13,6 +13,10 @@ BASE_URL=${BASE_URL:-https://cgoit.github.io/sitewatch}
 SUITE=stable
 ARCHS=${ARCHS:-"amd64 arm64"}
 KEY=${KEY:-$(gpg --list-secret-keys --with-colons | awk -F: '/^fpr:/ {print $10; exit}')}
+# Ubuntu 24.04 (apt mit sqv) lehnt EdDSA-Schlüssel ab ("untrusted public key algorithm: ed25519"): RSA verwenden.
+if gpg --list-secret-keys --with-colons "$KEY" 2>/dev/null | awk -F: '/^sec:/ {print $4; exit}' | grep -qx 22; then
+  echo "Der Signierschlüssel ist ed25519; Ubuntu 24.04 lehnt ihn ab. Bitte einen rsa4096-Schlüssel verwenden." >&2; exit 1
+fi
 [ -n "$KEY" ] || { echo "kein geheimer GPG-Schlüssel gefunden" >&2; exit 1; }
 ls "$DEBS"/*.deb >/dev/null
 
