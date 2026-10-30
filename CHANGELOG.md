@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.2](https://github.com/cgoIT/sitewatch/compare/v0.2.1...v0.2.2) (2026-10-30)
+
+
+### Bug Fixes
+
+* Paket sitewatch-agent legt /etc/sitewatch-agent an (0700) ([6b3d183](https://github.com/cgoIT/sitewatch/commit/6b3d183e622203cec434bfca388b6502e14a7207))
+
 ## [0.2.1](https://github.com/cgoIT/sitewatch/compare/v0.2.0...v0.2.1) (2026-10-30)
 
 
