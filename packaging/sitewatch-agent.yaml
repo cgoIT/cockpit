@@ -13,6 +13,9 @@ description: |
 homepage: https://github.com/cgoIT/sitewatch
 license: AGPL-3.0
 contents:
+  - dst: /etc/sitewatch-agent
+    type: dir
+    file_info: {mode: 0700, owner: root, group: root} # dort liegt die bootstrap.json mit dem Token
   - src: build/sitewatch-agent
     dst: /usr/bin/sitewatch-agent
     file_info: {mode: 0755}
