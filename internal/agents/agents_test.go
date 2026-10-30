@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"cockpit/internal/agentcfg"
+	"sitewatch/internal/agentcfg"
 )
 
 func site(id string) agentcfg.Site { return agentcfg.Site{ID: id, Kind: "php", Path: "/var/www/" + id} }

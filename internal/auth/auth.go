@@ -11,7 +11,7 @@ import (
 	"os"
 	"sort"
 
-	"cockpit/internal/report"
+	"sitewatch/internal/report"
 )
 
 // Load liest die Datei (Site-ID -> Hash). Eine fehlende Datei ergibt eine leere Liste.

@@ -13,8 +13,8 @@ import (
 	"sync"
 	"time"
 
-	"cockpit/internal/agentcfg"
-	"cockpit/internal/sign"
+	"sitewatch/internal/agentcfg"
+	"sitewatch/internal/sign"
 )
 
 const (
@@ -38,7 +38,7 @@ func writeIssued(path string, t time.Time) error {
 	return os.WriteFile(path, []byte(t.UTC().Format(time.RFC3339Nano)+"\n"), 0o600)
 }
 
-// runRemote holt vor jedem Lauf die signierte Konfiguration beim Cockpit (Sites und Intervall) und sammelt danach.
+// runRemote holt vor jedem Lauf die signierte Konfiguration bei Sitewatch (Sites und Intervall) und sammelt danach.
 func runRemote(ctx context.Context, client *http.Client, bs agentcfg.Bootstrap, once, dryRun bool) {
 	cur := &current{}
 	kick := make(chan string, 8)
@@ -61,7 +61,7 @@ func runRemote(ctx context.Context, client *http.Client, bs agentcfg.Bootstrap, 
 			cur.set(c)
 			wait = c.Interval
 			if len(c.Sites) == 0 {
-				log.Print("Hinweis: dem Agenten sind im Cockpit noch keine Sites zugewiesen")
+				log.Print("Hinweis: dem Agenten sind in Sitewatch noch keine Sites zugewiesen")
 			}
 			// shortcut: Sites laufen nacheinander (bis 5 Minuten je Site); bei Bedarf parallelisieren.
 			js = jobsFrom(c)
@@ -69,7 +69,7 @@ func runRemote(ctx context.Context, client *http.Client, bs agentcfg.Bootstrap, 
 				if ctx.Err() != nil {
 					return
 				}
-				runJob(ctx, client, bs.Cockpit, j, dryRun)
+				runJob(ctx, client, bs.Sitewatch, j, dryRun)
 			}
 		}
 		if once {
@@ -87,7 +87,7 @@ func runRemote(ctx context.Context, client *http.Client, bs agentcfg.Bootstrap, 
 			case id := <-kick: // nach einem Auftrag nur diese Site sofort neu melden
 				for _, j := range js {
 					if j.cfg.SiteID == id {
-						runJob(ctx, client, bs.Cockpit, j, dryRun)
+						runJob(ctx, client, bs.Sitewatch, j, dryRun)
 					}
 				}
 			}
@@ -97,7 +97,7 @@ func runRemote(ctx context.Context, client *http.Client, bs agentcfg.Bootstrap, 
 
 var remoteMu sync.Mutex
 
-// loadRemote liefert die Konfiguration: frisch vom Cockpit (geprüft und zwischengespeichert) oder, wenn das nicht geht,
+// loadRemote liefert die Konfiguration: frisch von Sitewatch (geprüft und zwischengespeichert) oder, wenn das nicht geht,
 // die zwischengespeicherte, solange sie gültig ist. Eine Antwort, die die Prüfung nicht besteht, ersetzt nie den Zwischenspeicher.
 func loadRemote(ctx context.Context, c *http.Client, bs agentcfg.Bootstrap, now time.Time) (agentcfg.Remote, error) {
 	remoteMu.Lock() // der Auftragskanal holt sie ebenfalls; die Dateien im State-Verzeichnis nicht gleichzeitig schreiben
@@ -133,7 +133,7 @@ func loadRemote(ctx context.Context, c *http.Client, bs agentcfg.Bootstrap, now 
 			}
 		}
 	}
-	log.Printf("Konfiguration vom Cockpit nicht übernommen: %v", err)
+	log.Printf("Konfiguration von Sitewatch nicht übernommen: %v", err)
 	if haveCache {
 		p, _ := sign.Verify(bs.PublicKey, cached, bs.Agent, now, time.Time{})
 		if rem, derr := decodeRemote(p, bs); derr == nil {
@@ -145,7 +145,7 @@ func loadRemote(ctx context.Context, c *http.Client, bs agentcfg.Bootstrap, now 
 }
 
 // decodeRemote liest die Konfiguration aus dem geprüften Inhalt und prüft sie noch einmal beim Agenten (Pfade gegen roots).
-// Unbekannte Felder werden ignoriert, damit ein neueres Cockpit einen älteren Agenten nicht aussperrt.
+// Unbekannte Felder werden ignoriert, damit ein neueres Sitewatch einen älteren Agenten nicht aussperrt.
 func decodeRemote(p sign.Payload, bs agentcfg.Bootstrap) (agentcfg.Remote, error) {
 	var rem agentcfg.Remote
 	if err := json.Unmarshal(p.Config, &rem); err != nil {
@@ -156,7 +156,7 @@ func decodeRemote(p sign.Payload, bs agentcfg.Bootstrap) (agentcfg.Remote, error
 
 func fetchEnvelope(ctx context.Context, c *http.Client, bs agentcfg.Bootstrap) (sign.Envelope, error) {
 	var env sign.Envelope
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, strings.TrimRight(bs.Cockpit, "/")+"/api/v1/agent/config", nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, strings.TrimRight(bs.Sitewatch, "/")+"/api/v1/agent/config", nil)
 	if err != nil {
 		return env, err
 	}
@@ -168,7 +168,7 @@ func fetchEnvelope(ctx context.Context, c *http.Client, bs agentcfg.Bootstrap) (
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		msg, _ := io.ReadAll(io.LimitReader(resp.Body, 300))
-		return env, fmt.Errorf("Cockpit antwortet %d: %s", resp.StatusCode, strings.TrimSpace(string(msg)))
+		return env, fmt.Errorf("Sitewatch antwortet %d: %s", resp.StatusCode, strings.TrimSpace(string(msg)))
 	}
 	return env, json.NewDecoder(io.LimitReader(resp.Body, 1<<20)).Decode(&env)
 }

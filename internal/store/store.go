@@ -7,10 +7,10 @@ package store
 import (
 	"time"
 
-	"cockpit/internal/report"
+	"sitewatch/internal/report"
 )
 
-// Entry ist ein gespeicherter Report samt Eingangszeit im Cockpit.
+// Entry ist ein gespeicherter Report samt Eingangszeit in Sitewatch.
 type Entry struct {
 	Report     report.Report `json:"report"`
 	ReceivedAt time.Time     `json:"received_at"`

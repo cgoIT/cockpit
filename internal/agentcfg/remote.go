@@ -10,20 +10,20 @@ import (
 	"strings"
 	"time"
 
-	"cockpit/internal/jobs"
-	"cockpit/internal/sign"
+	"sitewatch/internal/jobs"
+	"sitewatch/internal/sign"
 )
 
-// Remote ist der Teil der Konfiguration, den das Cockpit liefert: Intervall und Sites.
+// Remote ist der Teil der Konfiguration, den Sitewatch liefert: Intervall und Sites.
 // Programme (php, composer, nginx, mariadb), Token und Zwischenspeicher bleiben lokal im Bootstrap:
-// wer das Cockpit (oder dessen Signaturschlüssel) in der Hand hat, soll dem Agenten keine Programme unterschieben können.
+// wer Sitewatch (oder dessen Signaturschlüssel) in der Hand hat, soll dem Agenten keine Programme unterschieben können.
 type Remote struct {
 	Interval string `json:"interval,omitempty"`
 	Sites    []Site `json:"sites"`
 }
 
 // Validate prüft die Remote-Konfiguration. roots (absolute Verzeichnisse, nur beim Agenten bekannt): alle Pfade müssen darunter liegen;
-// nil = keine Prüfung (Cockpit beim Speichern). Token-Felder und Umgebungsvariablen außer SITE_DIR sind aus der Ferne nicht erlaubt.
+// nil = keine Prüfung (Sitewatch beim Speichern). Token-Felder und Umgebungsvariablen außer SITE_DIR sind aus der Ferne nicht erlaubt.
 func (r Remote) Validate(roots []string) error {
 	if r.Interval != "" {
 		if d, err := time.ParseDuration(r.Interval); err != nil || d < MinInterval {
@@ -40,7 +40,7 @@ func (r Remote) Validate(roots []string) error {
 		}
 		seen[s.ID] = true
 		if s.Token != "" || s.TokenFile != "" {
-			return fmt.Errorf("site %q: Token gehört nicht in die Konfiguration des Cockpits", s.ID)
+			return fmt.Errorf("site %q: Token gehört nicht in die Konfiguration von Sitewatch", s.ID)
 		}
 		for k := range s.Env {
 			if k != "SITE_DIR" {
@@ -72,7 +72,7 @@ func under(p string, roots []string) bool {
 
 // Bootstrap ist die lokale Datei eines Agenten im Fernkonfigurations-Modus.
 type Bootstrap struct {
-	Cockpit        string
+	Sitewatch      string
 	Agent          string
 	Token          string
 	PublicKey      ed25519.PublicKey
@@ -85,7 +85,7 @@ type Bootstrap struct {
 }
 
 type bootstrapFile struct {
-	Cockpit   string   `json:"cockpit"`
+	Sitewatch string   `json:"sitewatch"`
 	Agent     string   `json:"agent"`
 	Token     string   `json:"token"`
 	TokenFile string   `json:"token_file"`
@@ -111,7 +111,7 @@ func LoadBootstrap(path string) (Bootstrap, error) {
 	if err := dec.Decode(&f); err != nil {
 		return Bootstrap{}, fmt.Errorf("%s: %w", path, err)
 	}
-	if err := CheckCockpitURL(f.Cockpit); err != nil {
+	if err := CheckSitewatchURL(f.Sitewatch); err != nil {
 		return Bootstrap{}, err
 	}
 	pub, err := sign.ParsePublicKey(f.PublicKey)
@@ -122,7 +122,7 @@ func LoadBootstrap(path string) (Bootstrap, error) {
 		return Bootstrap{}, errors.New("agent fehlt")
 	}
 	if len(f.Roots) == 0 {
-		return Bootstrap{}, errors.New("roots fehlt (erlaubte Verzeichnisse für Pfade aus dem Cockpit, z. B. [\"/var/www\"])")
+		return Bootstrap{}, errors.New("roots fehlt (erlaubte Verzeichnisse für Pfade aus Sitewatch, z. B. [\"/var/www\"])")
 	}
 	for name, p := range map[string]string{"state": f.State} {
 		if p == "" || !filepath.IsAbs(p) {
@@ -143,13 +143,13 @@ func LoadBootstrap(path string) (Bootstrap, error) {
 	if err != nil {
 		return Bootstrap{}, err
 	}
-	return Bootstrap{Cockpit: f.Cockpit, Agent: f.Agent, Token: tok, PublicKey: pub, State: f.State, Roots: f.Roots,
+	return Bootstrap{Sitewatch: f.Sitewatch, Agent: f.Agent, Token: tok, PublicKey: pub, State: f.State, Roots: f.Roots,
 		Composer: f.Composer, PHP: f.PHP, Nginx: f.Nginx, MariaDB: f.MariaDB, Actions: f.Actions}, nil
 }
 
 // Config macht aus der Fernkonfiguration die Konfiguration des Agenten; alle Sites melden mit dem Token des Agenten.
 func (b Bootstrap) Config(r Remote) Config {
-	c := Config{Cockpit: b.Cockpit, Interval: 5 * time.Minute, Spool: filepath.Join(b.State, "spool"),
+	c := Config{Sitewatch: b.Sitewatch, Interval: 5 * time.Minute, Spool: filepath.Join(b.State, "spool"),
 		Composer: b.Composer, PHP: b.PHP, Nginx: b.Nginx, MariaDB: b.MariaDB, Sites: append([]Site(nil), r.Sites...)}
 	if d, err := time.ParseDuration(r.Interval); err == nil && d >= MinInterval {
 		c.Interval = d

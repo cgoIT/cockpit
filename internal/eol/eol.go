@@ -1,5 +1,5 @@
 // Package eol holt Support-Enden (PHP, Contao, MariaDB, nginx) von endoflife.date und hält sie zwischengespeichert vor.
-// Das Cockpit ruft die feste URL ab; schlägt der Abruf fehl, bleiben die letzten Daten gültig (und der Rückfall in status).
+// Sitewatch ruft die feste URL ab; schlägt der Abruf fehl, bleiben die letzten Daten gültig (und der Rückfall in status).
 package eol
 
 import (

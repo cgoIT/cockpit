@@ -1,0 +1,13 @@
+{
+  "sitewatch": "https://sitewatch.example",
+  "agent": "server1",
+  "token": "TOKEN-DES-AGENTEN",
+  "public_key": "AUSGABE-VON-sitewatch-pubkey",
+  "state": "/var/lib/sitewatch-agent",
+  "roots": ["/appl"],
+  "composer": "/usr/share/sitewatch-agent/docker/composer-in-docker",
+  "php": "/usr/share/sitewatch-agent/docker/php-in-docker",
+  "nginx": "/usr/share/sitewatch-agent/docker/nginx-in-docker",
+  "mariadb": "/usr/share/sitewatch-agent/docker/mariadb-in-docker",
+  "actions": ["site-status", "site-doctor", "site-validate-config", "contao-snapshot-list", "db-list", "contao-cache-refresh", "contao-filesync", "contao-snapshot", "db-snapshot", "site-restart", "maintenance-off", "maintenance-on", "contao-update"]
+}

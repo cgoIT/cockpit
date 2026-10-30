@@ -5,8 +5,8 @@ import (
 	"sort"
 	"time"
 
-	"cockpit/internal/status"
-	"cockpit/internal/store"
+	"sitewatch/internal/status"
+	"sitewatch/internal/store"
 )
 
 // cell ist ein Feld der Matrix. Text "–" = kein Wert vorhanden; Level färbt nur, wo es eine Schwelle gibt.

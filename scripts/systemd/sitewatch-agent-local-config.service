@@ -1,0 +1,17 @@
+# Ein Agent für alle Sites des Servers. Konfiguration: /etc/sitewatch-agent/config.json (nur root lesbar, chmod 600),
+# siehe sitewatch-agent.config.example.json. Variante mit Konfiguration aus Sitewatch: sitewatch-agent.service.
+[Unit]
+Description=Sitewatch-Agent
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+ExecStart=/usr/bin/sitewatch-agent -config /etc/sitewatch-agent/config.json
+Restart=on-failure
+RestartSec=30
+NoNewPrivileges=true
+ProtectHome=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

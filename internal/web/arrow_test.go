@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"cockpit/internal/store"
+	"sitewatch/internal/store"
 )
 
 func TestTrendArrow(t *testing.T) {

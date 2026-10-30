@@ -12,16 +12,16 @@ import (
 	"testing"
 	"time"
 
-	"cockpit/internal/agentcfg"
-	"cockpit/internal/agents"
-	"cockpit/internal/sign"
-	"cockpit/internal/status"
-	"cockpit/internal/store"
-	"cockpit/internal/web"
+	"sitewatch/internal/agentcfg"
+	"sitewatch/internal/agents"
+	"sitewatch/internal/sign"
+	"sitewatch/internal/status"
+	"sitewatch/internal/store"
+	"sitewatch/internal/web"
 )
 
-// TestJobEndToEnd lässt das echte Cockpit (web, SQLite) und den echten Agenten gegeneinander laufen:
-// Freigabe über die Oberfläche, Abholen per Long-Poll, Ausführen, Ausgabe und Ende im Cockpit.
+// TestJobEndToEnd lässt das echte Sitewatch (web, SQLite) und den echten Agenten gegeneinander laufen:
+// Freigabe über die Oberfläche, Abholen per Long-Poll, Ausführen, Ausgabe und Ende in Sitewatch.
 func TestJobEndToEnd(t *testing.T) {
 	dir := t.TempDir()
 	st, err := store.OpenSQLite(filepath.Join(dir, "c.db"), store.DefaultRetention())
@@ -47,7 +47,7 @@ func TestJobEndToEnd(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	bs := agentcfg.Bootstrap{Cockpit: ts.URL, Agent: "server1", Token: tok, PublicKey: priv.Public().(ed25519.PublicKey), State: t.TempDir(), Actions: []string{"maintenance-on"}, Roots: []string{os.TempDir()}}
+	bs := agentcfg.Bootstrap{Sitewatch: ts.URL, Agent: "server1", Token: tok, PublicKey: priv.Public().(ed25519.PublicKey), State: t.TempDir(), Actions: []string{"maintenance-on"}, Roots: []string{os.TempDir()}}
 	cur := &current{}
 	cur.set(agentcfg.Config{PHP: php, Sites: []agentcfg.Site{{ID: "cgo", Kind: "contao", Path: site, Actions: allActions("contao")}}})
 	kick := make(chan string, 4)

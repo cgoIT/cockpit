@@ -1,4 +1,4 @@
-// Package jobs enthält die feste Liste der Aktionen, die das Cockpit einem Agenten auftragen darf.
+// Package jobs enthält die feste Liste der Aktionen, die Sitewatch einem Agenten auftragen darf.
 // Es gibt keine freie Shell: Der Auftrag nennt nur den Namen; Programm und Argumente stehen hier und werden vom Agenten selbst gebaut.
 package jobs
 
@@ -10,10 +10,10 @@ const TTL = 10 * time.Minute
 // DefaultTimeout ist das Zeitlimit einer Aktion, wenn sie kein eigenes hat.
 const DefaultTimeout = 10 * time.Minute
 
-// MaxTimeout ist das längste Zeitlimit; das Cockpit hält einen laufenden Auftrag danach für verwaist (siehe store.jobStale).
+// MaxTimeout ist das längste Zeitlimit; Sitewatch hält einen laufenden Auftrag danach für verwaist (siehe store.jobStale).
 const MaxTimeout = 30 * time.Minute
 
-// Level legt fest, wie das Cockpit die Freigabe verlangt.
+// Level legt fest, wie Sitewatch die Freigabe verlangt.
 type Level int
 
 const (

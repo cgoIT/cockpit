@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"cockpit/internal/status"
-	"cockpit/internal/store"
+	"sitewatch/internal/status"
+	"sitewatch/internal/store"
 )
 
 // Sender verschickt eine Nachricht. Ein Fehler führt dazu, dass der Versuch im nächsten Zyklus wiederholt wird.
@@ -65,12 +65,12 @@ func (w *Watcher) Check() {
 		switch {
 		case res.Level == status.Crit && !w.crit[id]:
 			body := "Kritisch:\n- " + strings.Join(res.Reasons, "\n- ") + "\n"
-			if w.Send("Cockpit: "+name+" ist kritisch", body) == nil {
+			if w.Send("Sitewatch: "+name+" ist kritisch", body) == nil {
 				w.crit[id] = true
 				w.persist(id, true)
 			}
 		case res.Level != status.Crit && w.crit[id]:
-			if w.Send("Cockpit: "+name+" ist wieder in Ordnung", "Status: "+res.Level.String()+"\n") == nil {
+			if w.Send("Sitewatch: "+name+" ist wieder in Ordnung", "Status: "+res.Level.String()+"\n") == nil {
 				delete(w.crit, id)
 				w.persist(id, false)
 			}

@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"cockpit/internal/status"
-	"cockpit/internal/store"
+	"sitewatch/internal/status"
+	"sitewatch/internal/store"
 )
 
 // Die Kurven sind serverseitig gerenderte SVG-Pfade (kein JavaScript, passt zur CSP).

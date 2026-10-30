@@ -1,11 +1,12 @@
 {{define "css"}}
+<link rel="manifest" href="/manifest.webmanifest"><link rel="icon" href="/icon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><meta name="theme-color" content="#1F5FBF">
 <style>
 :root{--ink:#1B2430;--muted:#55606E;--line:#DDE1E7;--bg:#F4F5F7;--accent:#1F5FBF}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif}
 a{color:var(--accent)}
 header.top{display:flex;flex-wrap:wrap;align-items:center;gap:16px;padding:16px 32px;background:#fff;border-bottom:1px solid var(--line)}
-header.top .brand{font-size:18px;font-weight:600}
+header.top .brand{font-size:18px;font-weight:600;display:flex;align-items:center;gap:10px}
 header.top nav a{padding:10px 14px;border-radius:6px;color:#3B4654;text-decoration:none}
 header.top nav a.on{background:#E8EFFA;color:#174A94;font-weight:500}
 main{max-width:1360px;margin:0 auto;padding:24px 32px 40px;display:flex;flex-direction:column;gap:24px}
@@ -71,8 +72,12 @@ table.matrix{min-width:0}
 td.cell,table.matrix th:not(:first-child){text-align:center}
 td.cell.warn{background:#FBEFD2;color:#6B4600}
 td.cell.crit{background:#FBE4E2;color:#8F1C16}
+footer.foot{max-width:1360px;margin:0 auto;padding:0 32px 24px;color:var(--muted);font-size:12px}
 </style>
 {{end}}
 {{define "top"}}
-<header class="top"><div class="brand">Cockpit</div><nav><a href="/"{{if eq . "overview"}} class="on"{{end}}>Übersicht</a>{{if hasAgents}}<a href="/agents"{{if eq . "agents"}} class="on"{{end}}>Agenten</a>{{end}}{{if hasJobs}}<a href="/jobs"{{if eq . "jobs"}} class="on"{{end}}>Aufträge</a>{{end}}</nav>{{if hasLogin}}<form method="post" action="/logout" class="logout"><button type="submit">Abmelden</button></form>{{end}}</header>
+<header class="top"><div class="brand"><img src="/icon.svg" alt="" width="28" height="28">Sitewatch</div><nav><a href="/"{{if eq . "overview"}} class="on"{{end}}>Übersicht</a>{{if hasAgents}}<a href="/agents"{{if eq . "agents"}} class="on"{{end}}>Agenten</a>{{end}}{{if hasJobs}}<a href="/jobs"{{if eq . "jobs"}} class="on"{{end}}>Aufträge</a>{{end}}</nav>{{if hasLogin}}<form method="post" action="/logout" class="logout"><button type="submit">Abmelden</button></form>{{end}}</header>
+{{end}}
+{{define "foot"}}
+<footer class="foot">Sitewatch {{version}}</footer>
 {{end}}

@@ -13,12 +13,12 @@ import (
 	"strings"
 	"time"
 
-	"cockpit/internal/report"
+	"sitewatch/internal/report"
 )
 
 const consoleBin = "vendor/bin/contao-console"
 
-// ConsoleBin ist der Pfad der Contao-Konsole relativ zur Site (auch für Aufträge des Cockpits).
+// ConsoleBin ist der Pfad der Contao-Konsole relativ zur Site (auch für Aufträge von Sitewatch).
 const ConsoleBin = consoleBin
 
 // collectContaoConsole fragt über die Contao-Konsole offene Migrationen und den letzten Cron-Lauf ab.

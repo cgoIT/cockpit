@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-// thresholdFile ist die optionale Schwellenwert-Datei des Cockpits. Fehlende Felder behalten den Standardwert.
+// thresholdFile ist die optionale Schwellenwert-Datei von Sitewatch. Fehlende Felder behalten den Standardwert.
 // Einheiten stehen im Namen, damit es keine Parsing-Fallen gibt (time.ParseDuration kennt keine Tage).
 type thresholdFile struct {
 	StaleAfterMinutes *int `json:"stale_after_minutes"`

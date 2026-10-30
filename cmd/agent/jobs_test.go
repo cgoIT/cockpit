@@ -13,19 +13,19 @@ import (
 	"testing"
 	"time"
 
-	"cockpit/internal/agentcfg"
-	"cockpit/internal/jobs"
-	"cockpit/internal/sign"
+	"sitewatch/internal/agentcfg"
+	"sitewatch/internal/jobs"
+	"sitewatch/internal/sign"
 )
 
-// fakeCockpit zeichnet die Meldungen des Agenten auf. cancelOn: ab diesem Zustand/dieser Anzahl Meldungen antwortet es mit cancel.
-type fakeCockpit struct {
+// fakeSitewatch zeichnet die Meldungen des Agenten auf. cancelOn: ab diesem Zustand/dieser Anzahl Meldungen antwortet es mit cancel.
+type fakeSitewatch struct {
 	mu       sync.Mutex
 	events   []event
 	cancelAt string // "running" = beim Start, "chunks" = bei der ersten Ausgabe-Meldung
 }
 
-func (f *fakeCockpit) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (f *fakeSitewatch) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var ev event
 	_ = json.NewDecoder(r.Body).Decode(&ev)
 	f.mu.Lock()
@@ -35,7 +35,7 @@ func (f *fakeCockpit) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(map[string]bool{"cancel": cancel})
 }
 
-func (f *fakeCockpit) states() (s []string, out string) {
+func (f *fakeSitewatch) states() (s []string, out string) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	for _, e := range f.events {
@@ -49,7 +49,7 @@ func (f *fakeCockpit) states() (s []string, out string) {
 	return
 }
 
-func setupRunner(t *testing.T, actions []string, phpScript string, f *fakeCockpit) (*jobRunner, ed25519.PrivateKey, chan string, string) {
+func setupRunner(t *testing.T, actions []string, phpScript string, f *fakeSitewatch) (*jobRunner, ed25519.PrivateKey, chan string, string) {
 	t.Helper()
 	pub, priv, _ := ed25519.GenerateKey(nil)
 	ts := httptest.NewServer(f)
@@ -65,7 +65,7 @@ func setupRunner(t *testing.T, actions []string, phpScript string, f *fakeCockpi
 	if err := os.WriteFile(php, []byte("#!/bin/sh\n"+phpScript), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	bs := agentcfg.Bootstrap{Cockpit: ts.URL, Agent: "server1", Token: "tok", PublicKey: pub, State: t.TempDir(), Actions: actions, Roots: []string{os.TempDir()}}
+	bs := agentcfg.Bootstrap{Sitewatch: ts.URL, Agent: "server1", Token: "tok", PublicKey: pub, State: t.TempDir(), Actions: actions, Roots: []string{os.TempDir()}}
 	cur := &current{}
 	cur.set(agentcfg.Config{PHP: php, Sites: []agentcfg.Site{{ID: "cgo", Kind: "contao", Path: site, Actions: allActions("contao")}, {ID: "plain", Kind: "php", Path: site, Actions: allActions("php")}}})
 	kick := make(chan string, 8)
@@ -83,7 +83,7 @@ func jobFor(t *testing.T, priv ed25519.PrivateKey, id, site, action string) sign
 }
 
 func TestJobRunsAndStreams(t *testing.T) {
-	f := &fakeCockpit{}
+	f := &fakeSitewatch{}
 	r, priv, kick, site := setupRunner(t, []string{"maintenance-on", "maintenance-off"}, `echo "args: $@"; echo "fehler" >&2; echo "dir: $PWD"; exit 0`, f)
 	r.handle(context.Background(), jobFor(t, priv, "j1", "cgo", "maintenance-on"))
 	st, out := f.states()
@@ -109,7 +109,7 @@ func TestJobRunsAndStreams(t *testing.T) {
 }
 
 func TestJobFailureReportsExit(t *testing.T) {
-	f := &fakeCockpit{}
+	f := &fakeSitewatch{}
 	r, priv, _, _ := setupRunner(t, []string{"maintenance-on"}, `echo boom; exit 3`, f)
 	r.handle(context.Background(), jobFor(t, priv, "j1", "cgo", "maintenance-on"))
 	f.mu.Lock()
@@ -121,7 +121,7 @@ func TestJobFailureReportsExit(t *testing.T) {
 }
 
 func TestJobRejections(t *testing.T) {
-	f := &fakeCockpit{}
+	f := &fakeSitewatch{}
 	r, priv, _, site := setupRunner(t, []string{"maintenance-on"}, `echo ran`, f) // läuft etwas, steht "ran" in der Ausgabe
 	_, otherKey, _ := ed25519.GenerateKey(nil)
 	foreign, _ := sign.Job(otherKey, sign.JobPayload{
@@ -163,7 +163,7 @@ func TestJobRejections(t *testing.T) {
 
 func TestJobCanceledBeforeStart(t *testing.T) {
 	marker := filepath.Join(t.TempDir(), "ran")
-	f := &fakeCockpit{cancelAt: "running"}
+	f := &fakeSitewatch{cancelAt: "running"}
 	r, priv, _, _ := setupRunner(t, []string{"maintenance-on"}, `touch `+marker, f)
 	r.handle(context.Background(), jobFor(t, priv, "j1", "cgo", "maintenance-on"))
 	if st, _ := f.states(); strings.Join(st, ",") != "running,canceled" {
@@ -175,7 +175,7 @@ func TestJobCanceledBeforeStart(t *testing.T) {
 }
 
 func TestJobCanceledWhileRunning(t *testing.T) {
-	f := &fakeCockpit{cancelAt: "chunks"}
+	f := &fakeSitewatch{cancelAt: "chunks"}
 	r, priv, _, _ := setupRunner(t, []string{"maintenance-on"}, `echo anfang; sleep 30; echo ende`, f)
 	start := time.Now()
 	r.handle(context.Background(), jobFor(t, priv, "j1", "cgo", "maintenance-on"))
@@ -210,8 +210,8 @@ func TestPollExplainsRedirect(t *testing.T) {
 		http.Redirect(w, r, "/login", http.StatusFound)
 	}))
 	defer ts.Close()
-	r, _, _, _ := setupRunner(t, []string{"maintenance-on"}, "", &fakeCockpit{})
-	r.bs.Cockpit = ts.URL
+	r, _, _, _ := setupRunner(t, []string{"maintenance-on"}, "", &fakeSitewatch{})
+	r.bs.Sitewatch = ts.URL
 	_, err := r.poll(context.Background())
 	if err == nil || !strings.Contains(err.Error(), "leitet um") || strings.Contains(err.Error(), "invalid character") {
 		t.Errorf("Fehlertext: %v", err)
@@ -232,7 +232,7 @@ func siteTool(t *testing.T, script string) string {
 }
 
 func TestSiteActionRunsToolInSiteDir(t *testing.T) {
-	f := &fakeCockpit{}
+	f := &fakeSitewatch{}
 	r, priv, _, _ := setupRunner(t, []string{"site-status"}, ``, f)
 	dir := siteTool(t, `printf '\033[32mgrün\033[0m %s\n' "$*"; echo "dir=$PWD color=$NO_COLOR"`)
 	cfg, _ := r.cur.get()
@@ -257,7 +257,7 @@ func TestSiteActionRunsToolInSiteDir(t *testing.T) {
 }
 
 func TestSiteActionRejections(t *testing.T) {
-	f := &fakeCockpit{}
+	f := &fakeSitewatch{}
 	r, priv, _, _ := setupRunner(t, []string{"site-status", "contao-cache-refresh", "db-list"}, `echo ran`, f)
 	reset := func() { f.mu.Lock(); f.events = nil; f.mu.Unlock() }
 	// ohne SITE_DIR in der Konfiguration der Site
@@ -368,10 +368,10 @@ func allActions(kind string) []string {
 }
 
 func TestRejectsActionNotAllowedForSite(t *testing.T) {
-	f := &fakeCockpit{}
+	f := &fakeSitewatch{}
 	r, priv, _, _ := setupRunner(t, []string{"site-status"}, `echo ran`, f)
 	cfg, _ := r.cur.get()
-	cfg.Sites[0].Actions = nil // lokal erlaubt, im Cockpit für diese Site nicht freigegeben
+	cfg.Sites[0].Actions = nil // lokal erlaubt, in Sitewatch für diese Site nicht freigegeben
 	r.cur.set(cfg)
 	r.handle(context.Background(), jobFor(t, priv, "w1", "cgo", "site-status"))
 	if st, out := f.states(); strings.Join(st, ",") != "rejected" || strings.Contains(out, "ran") {
@@ -380,14 +380,14 @@ func TestRejectsActionNotAllowedForSite(t *testing.T) {
 }
 
 func TestRefreshesConfigBeforeJudgingJob(t *testing.T) {
-	f := &fakeCockpit{}
+	f := &fakeSitewatch{}
 	r, priv, _, _ := setupRunner(t, []string{"site-status"}, `echo ran`, f)
 	dir := siteTool(t, `echo ran`)
 	cfg, _ := r.cur.get()
 	cfg.Sites[0].Env, cfg.Sites[0].Path = map[string]string{"SITE_DIR": dir}, filepath.Join(dir, "webroot")
 	fresh := cfg
 	fresh.Sites = append([]agentcfg.Site(nil), cfg.Sites...)
-	cfg.Sites[0].Actions = nil // veralteter Stand ohne die eben im Cockpit gespeicherte Freigabe
+	cfg.Sites[0].Actions = nil // veralteter Stand ohne die eben in Sitewatch gespeicherte Freigabe
 	r.cur.set(cfg)
 	r.refresh = func(context.Context) { r.cur.set(fresh) }
 	r.handle(context.Background(), jobFor(t, priv, "r1", "cgo", "site-status"))

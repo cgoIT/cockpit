@@ -10,16 +10,16 @@ import (
 	"testing"
 	"time"
 
-	"cockpit/internal/auth"
-	"cockpit/internal/report"
-	"cockpit/internal/status"
-	"cockpit/internal/store"
+	"sitewatch/internal/auth"
+	"sitewatch/internal/report"
+	"sitewatch/internal/status"
+	"sitewatch/internal/store"
 )
 
 func setup(t *testing.T) (*Server, string, time.Time) {
 	t.Helper()
 	dir := t.TempDir()
-	st, err := store.OpenSQLite(filepath.Join(dir, "data", "cockpit.db"), store.DefaultRetention())
+	st, err := store.OpenSQLite(filepath.Join(dir, "data", "sitewatch.db"), store.DefaultRetention())
 	if err != nil {
 		t.Fatal(err)
 	}

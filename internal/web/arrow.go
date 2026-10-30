@@ -5,8 +5,8 @@ import (
 	"math"
 	"time"
 
-	"cockpit/internal/status"
-	"cockpit/internal/store"
+	"sitewatch/internal/status"
+	"sitewatch/internal/store"
 )
 
 // arrow ist ein kleiner Trendhinweis neben einem Wert: Pfeil mit Betrag der Veränderung, Tooltip mit Vergleichswert.

@@ -12,10 +12,10 @@ import (
 	"testing"
 	"time"
 
-	"cockpit/internal/agentcfg"
-	"cockpit/internal/jobs"
-	"cockpit/internal/sign"
-	"cockpit/internal/store"
+	"sitewatch/internal/agentcfg"
+	"sitewatch/internal/jobs"
+	"sitewatch/internal/sign"
+	"sitewatch/internal/store"
 )
 
 func setupJobs(t *testing.T) (srv *Server, tok string) {

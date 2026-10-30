@@ -1,0 +1,44 @@
+# nfpm-Konfiguration für das Debian-Paket "sitewatch-agent"; gebaut von scripts/build-deb.sh (ARCH und VERSION kommen aus der Umgebung).
+name: sitewatch-agent
+arch: ${ARCH}
+platform: linux
+version: ${VERSION}
+section: admin
+priority: optional
+maintainer: cgoIT <kontakt@cgo-it.de>
+description: |
+  Agent von Sitewatch für Contao-/PHP-Websites
+  Sammelt Zustandsdaten dieses Servers und pusht sie ausgehend an Sitewatch.
+  Nach der Installation /etc/sitewatch-agent/bootstrap.json anlegen (Vorlage unter /usr/share/doc/sitewatch-agent/examples) und den Dienst starten.
+homepage: https://github.com/cgoIT/sitewatch
+license: AGPL-3.0
+contents:
+  - src: build/sitewatch-agent
+    dst: /usr/bin/sitewatch-agent
+    file_info: {mode: 0755}
+  - src: scripts/systemd/sitewatch-agent.service
+    dst: /lib/systemd/system/sitewatch-agent.service
+  - src: scripts/systemd/sitewatch-agent-local-config.service
+    dst: /usr/share/doc/sitewatch-agent/examples/sitewatch-agent-local-config.service
+  - src: scripts/systemd/sitewatch-agent.bootstrap.example.json
+    dst: /usr/share/doc/sitewatch-agent/examples/sitewatch-agent.bootstrap.example.json
+  - src: scripts/systemd/sitewatch-agent.config.example.json
+    dst: /usr/share/doc/sitewatch-agent/examples/sitewatch-agent.config.example.json
+  - src: scripts/docker/composer-in-docker
+    dst: /usr/share/sitewatch-agent/docker/composer-in-docker
+    file_info: {mode: 0755}
+  - src: scripts/docker/php-in-docker
+    dst: /usr/share/sitewatch-agent/docker/php-in-docker
+    file_info: {mode: 0755}
+  - src: scripts/docker/nginx-in-docker
+    dst: /usr/share/sitewatch-agent/docker/nginx-in-docker
+    file_info: {mode: 0755}
+  - src: scripts/docker/mariadb-in-docker
+    dst: /usr/share/sitewatch-agent/docker/mariadb-in-docker
+    file_info: {mode: 0755}
+  - src: LICENSE
+    dst: /usr/share/doc/sitewatch-agent/copyright
+scripts:
+  postinstall: packaging/sitewatch-agent.postinst
+  preremove: packaging/sitewatch-agent.prerm
+  postremove: packaging/postrm

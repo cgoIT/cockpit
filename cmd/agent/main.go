@@ -1,4 +1,4 @@
-// Der Agent sammelt Zustandsdaten einer Site und pusht sie ausgehend per HTTPS an das Cockpit.
+// Der Agent sammelt Zustandsdaten einer Site und pusht sie ausgehend per HTTPS an Sitewatch.
 // Auf dem Zielserver muss kein Port geöffnet werden.
 package main
 
@@ -19,8 +19,8 @@ import (
 	"syscall"
 	"time"
 
-	"cockpit/internal/agentcfg"
-	"cockpit/internal/collect"
+	"sitewatch/internal/agentcfg"
+	"sitewatch/internal/collect"
 )
 
 // version wird beim Build per -ldflags "-X main.version=..." gesetzt (scripts/build.sh).
@@ -35,14 +35,14 @@ type job struct {
 func main() {
 	var (
 		configFile = flag.String("config", "", "Konfigurationsdatei (JSON) mit mehreren Sites; ersetzt die Einzel-Flags unten")
-		bootstrap  = flag.String("bootstrap", "", "lokale Datei (JSON) für die Konfiguration aus dem Cockpit: Cockpit-URL, Agent, Token, öffentlicher Schlüssel; Sites und Intervall holt der Agent beim Cockpit")
+		bootstrap  = flag.String("bootstrap", "", "lokale Datei (JSON) für die Konfiguration aus Sitewatch: Sitewatch-URL, Agent, Token, öffentlicher Schlüssel; Sites und Intervall holt der Agent bei Sitewatch")
 		siteID     = flag.String("site-id", "", "Site-ID (a-z, 0-9, -)")
 		name       = flag.String("name", "", "Anzeigename")
 		kind       = flag.String("kind", "contao", `"contao", "php" oder "host" (nur Servermesswerte)`)
 		siteURL    = flag.String("url", "", "öffentliche URL der Site")
 		path       = flag.String("path", "", "Projektverzeichnis der Site (bei kind=host optional: Dateisystem für den freien Platz)")
-		cockpit    = flag.String("cockpit", "", "Basis-URL des Cockpits, z. B. https://cockpit.example")
-		token      = flag.String("token", os.Getenv("COCKPIT_TOKEN"), "Token (oder Umgebungsvariable COCKPIT_TOKEN)")
+		sitewatch  = flag.String("sitewatch", "", "Basis-URL von Sitewatch, z. B. https://sitewatch.example")
+		token      = flag.String("token", os.Getenv("SITEWATCH_TOKEN"), "Token (oder Umgebungsvariable SITEWATCH_TOKEN)")
 		composer   = flag.String("composer", "composer", "Pfad zum composer-Binary")
 		php        = flag.String("php", "php", "Pfad zum php-Binary")
 		backups    = flag.String("backup-dir", "", "Verzeichnis, in dem die Backups liegen (für die Altersprüfung)")
@@ -50,20 +50,20 @@ func main() {
 		interval   = flag.Duration("interval", 5*time.Minute, "Abstand zwischen Reports")
 		once       = flag.Bool("once", false, "einmal senden und beenden")
 		host       = flag.Bool("host", true, "Host-Infos (nginx, MariaDB, Speicherplatz) mit erfassen")
-		spool      = flag.String("spool", "", "Verzeichnis zum Zwischenspeichern, wenn das Cockpit nicht erreichbar ist")
+		spool      = flag.String("spool", "", "Verzeichnis zum Zwischenspeichern, wenn Sitewatch nicht erreichbar ist")
 		dryRun     = flag.Bool("dry-run", false, "Report nur ausgeben, nichts senden")
 		showVer    = flag.Bool("version", false, "Version ausgeben und beenden")
 	)
 	flag.Parse()
 	if *showVer {
-		fmt.Println("cockpit-agent", version)
+		fmt.Println("sitewatch-agent", version)
 		return
 	}
-	log.Printf("Cockpit-Agent %s startet", version)
+	log.Printf("Sitewatch-Agent %s startet", version)
 
 	var jobs []job
 	if *configFile != "" || *bootstrap != "" {
-		single := map[string]bool{"site-id": true, "name": true, "kind": true, "url": true, "path": true, "cockpit": true, "token": true,
+		single := map[string]bool{"site-id": true, "name": true, "kind": true, "url": true, "path": true, "sitewatch": true, "token": true,
 			"composer": true, "php": true, "backup-dir": true, "backup-glob": true, "interval": true, "host": true, "spool": true}
 		flag.Visit(func(f *flag.Flag) {
 			if single[f.Name] {
@@ -89,16 +89,16 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		*cockpit, *interval = c.Cockpit, c.Interval
+		*sitewatch, *interval = c.Sitewatch, c.Interval
 		jobs = jobsFrom(c)
 	} else {
-		if *siteID == "" || (*path == "" && *kind != "host") || (!*dryRun && (*cockpit == "" || *token == "")) {
-			fmt.Fprintln(os.Stderr, "benötigt: -config oder -site-id, -path (außer kind=host) sowie -cockpit und -token (außer bei -dry-run)")
+		if *siteID == "" || (*path == "" && *kind != "host") || (!*dryRun && (*sitewatch == "" || *token == "")) {
+			fmt.Fprintln(os.Stderr, "benötigt: -config oder -site-id, -path (außer kind=host) sowie -sitewatch und -token (außer bei -dry-run)")
 			flag.Usage()
 			os.Exit(2)
 		}
 		if !*dryRun {
-			if err := agentcfg.CheckCockpitURL(*cockpit); err != nil {
+			if err := agentcfg.CheckSitewatchURL(*sitewatch); err != nil {
 				log.Fatal(err)
 			}
 		}
@@ -120,7 +120,7 @@ func main() {
 			if ctx.Err() != nil {
 				return
 			}
-			runJob(ctx, client, *cockpit, j, *dryRun)
+			runJob(ctx, client, *sitewatch, j, *dryRun)
 		}
 	}
 	cycle()
@@ -163,7 +163,7 @@ func jobsFrom(c agentcfg.Config) []job {
 }
 
 // runJob sammelt und sendet einen Report. Fehler einer Site betreffen die anderen nicht.
-func runJob(ctx context.Context, client *http.Client, cockpit string, j job, dryRun bool) {
+func runJob(ctx context.Context, client *http.Client, sitewatch string, j job, dryRun bool) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Minute)
 	defer cancel()
 	rep, err := collect.Collect(ctx, j.cfg)
@@ -177,9 +177,9 @@ func runJob(ctx context.Context, client *http.Client, cockpit string, j job, dry
 		return
 	}
 	if j.spool != "" {
-		flushSpool(ctx, client, cockpit, j.token, j.spool)
+		flushSpool(ctx, client, sitewatch, j.token, j.spool)
 	}
-	if err := push(ctx, client, cockpit, j.token, body); err != nil {
+	if err := push(ctx, client, sitewatch, j.token, body); err != nil {
 		log.Printf("%s: Senden fehlgeschlagen: %v", rep.Site.ID, err)
 		if j.spool != "" {
 			if serr := saveSpool(j.spool, rep.CollectedAt, body); serr != nil {
@@ -217,7 +217,7 @@ func push(ctx context.Context, c *http.Client, base, token string, body []byte) 
 	defer resp.Body.Close()
 	if resp.StatusCode/100 != 2 {
 		msg, _ := io.ReadAll(io.LimitReader(resp.Body, 300))
-		return fmt.Errorf("Cockpit antwortet %d: %s", resp.StatusCode, strings.TrimSpace(string(msg)))
+		return fmt.Errorf("Sitewatch antwortet %d: %s", resp.StatusCode, strings.TrimSpace(string(msg)))
 	}
 	return nil
 }

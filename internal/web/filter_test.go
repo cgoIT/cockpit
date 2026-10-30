@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"cockpit/internal/report"
+	"sitewatch/internal/report"
 )
 
 func TestOverviewFilter(t *testing.T) {

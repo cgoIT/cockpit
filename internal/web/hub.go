@@ -3,7 +3,7 @@ package web
 import "sync"
 
 // hub weckt wartende Handler (Long-Poll der Agenten, Live-Ansicht eines Auftrags), wenn sich etwas geändert hat.
-// Nur im Speicher und nur für eine Cockpit-Instanz; wer verpasst, fragt beim nächsten Zeitablauf ohnehin den Speicher.
+// Nur im Speicher und nur für eine Sitewatch-Instanz; wer verpasst, fragt beim nächsten Zeitablauf ohnehin den Speicher.
 type hub struct {
 	mu   sync.Mutex
 	subs map[string]map[chan struct{}]struct{}

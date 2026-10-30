@@ -6,17 +6,17 @@ import (
 	"strings"
 	"testing"
 
-	"cockpit/internal/sign"
+	"sitewatch/internal/sign"
 )
 
 // Die Vorlage muss sich laden lassen, sobald die Platzhalter ersetzt sind (Schutz vor Drift zum Bootstrap-Format).
 func TestBootstrapExampleLoads(t *testing.T) {
-	b, err := os.ReadFile("../../scripts/systemd/cockpit-agent.bootstrap.example.json")
+	b, err := os.ReadFile("../../scripts/systemd/sitewatch-agent.bootstrap.example.json")
 	if err != nil {
 		t.Fatal(err)
 	}
 	pub, _, _ := ed25519.GenerateKey(nil)
-	s := strings.ReplaceAll(string(b), "AUSGABE-VON-cockpit-pubkey", sign.EncodePublicKey(pub))
+	s := strings.ReplaceAll(string(b), "AUSGABE-VON-sitewatch-pubkey", sign.EncodePublicKey(pub))
 	p := t.TempDir() + "/bootstrap.json"
 	if err := os.WriteFile(p, []byte(s), 0o600); err != nil {
 		t.Fatal(err)
@@ -29,7 +29,7 @@ func TestBootstrapExampleLoads(t *testing.T) {
 func TestBootstrapRejectsUnknownAction(t *testing.T) {
 	pub, _, _ := ed25519.GenerateKey(nil)
 	p := t.TempDir() + "/bootstrap.json"
-	body := `{"cockpit":"https://c.example","agent":"a","token":"t","public_key":"` + sign.EncodePublicKey(pub) + `","state":"/var/lib/x","roots":["/appl"],"actions":["rm-rf"]}`
+	body := `{"sitewatch":"https://c.example","agent":"a","token":"t","public_key":"` + sign.EncodePublicKey(pub) + `","state":"/var/lib/x","roots":["/appl"],"actions":["rm-rf"]}`
 	if err := os.WriteFile(p, []byte(body), 0o600); err != nil {
 		t.Fatal(err)
 	}

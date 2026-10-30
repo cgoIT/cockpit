@@ -1,0 +1,41 @@
+# Sitewatch selbst (Dashboard und Annahme der Reports). Lauscht nur lokal; davor gehört ein Reverse-Proxy mit TLS.
+# Mit dem Debian-Paket (apt install sitewatch, siehe README) ist alles eingerichtet bis auf /etc/sitewatch/sitewatch.env.
+# Von Hand (einmalig):
+#   useradd --system --home /var/lib/sitewatch --shell /usr/sbin/nologin sitewatch
+#   install -m 0755 sitewatch /usr/bin/sitewatch
+#   install -d -m 0750 -o root -g sitewatch /etc/sitewatch
+#   install -m 0640 -o root -g sitewatch sitewatch.env.example /etc/sitewatch/sitewatch.env   # dann ausfüllen
+# Token anlegen (als derselbe Benutzer, sonst gehört die Datei root):
+#   sudo -u sitewatch /usr/bin/sitewatch token -tokens /var/lib/sitewatch/tokens.json <site-id>
+# Zugriffsregel, öffentliche URL, Proxy und Alarmierung stehen als SITEWATCH_ARGS in /etc/sitewatch/sitewatch.env.
+[Unit]
+Description=Sitewatch (Überwachung der Websites)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=sitewatch
+Group=sitewatch
+EnvironmentFile=/etc/sitewatch/sitewatch.env
+ExecStart=/usr/bin/sitewatch serve -addr 127.0.0.1:8080 -data /var/lib/sitewatch -tokens /var/lib/sitewatch/tokens.json $SITEWATCH_ARGS
+# sitewatch.db, Signaturschlüssel (signing.key), agents.json und tokens.json: /var/lib/sitewatch (sichern!)
+StateDirectory=sitewatch
+StateDirectoryMode=0750
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+LockPersonality=true
+SystemCallArchitectures=native
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

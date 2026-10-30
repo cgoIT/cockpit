@@ -21,7 +21,7 @@ func newSessions(t *testing.T) (*Sessions, *time.Time) {
 
 func issue(s *Sessions) *http.Cookie {
 	rec := httptest.NewRecorder()
-	s.Set(rec, Identity{Subject: "u1", Email: "a@example.org", Groups: []string{"cockpit"}})
+	s.Set(rec, Identity{Subject: "u1", Email: "a@example.org", Groups: []string{"sitewatch"}})
 	return rec.Result().Cookies()[0]
 }
 
@@ -40,7 +40,7 @@ func TestSessionRoundtripAndAttributes(t *testing.T) {
 		t.Errorf("Cookie-Attribute: %+v", c)
 	}
 	id, ok := s.Get(reqWith(c))
-	if !ok || id.Subject != "u1" || id.Groups[0] != "cockpit" {
+	if !ok || id.Subject != "u1" || id.Groups[0] != "sitewatch" {
 		t.Fatalf("Get: %+v %v", id, ok)
 	}
 }

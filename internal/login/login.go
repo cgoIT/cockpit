@@ -19,12 +19,12 @@ import (
 	"golang.org/x/oauth2"
 )
 
-const flowCookie = "cockpit_oidc"
+const flowCookie = "sitewatch_oidc"
 
 // Config beschreibt den Client beim Identity Provider.
 type Config struct {
 	Issuer, ClientID, ClientSecret string
-	RedirectURL                    string // z. B. https://cockpit.example/callback
+	RedirectURL                    string // z. B. https://sitewatch.example/callback
 }
 
 // Identity ist das geprüfte Ergebnis eines Logins.

@@ -61,7 +61,7 @@ func newStub(t *testing.T) *stubIdP {
 func (s *stubIdP) idToken(nonce string) string {
 	h, _ := json.Marshal(map[string]string{"alg": "RS256", "kid": "k1", "typ": "JWT"})
 	p, _ := json.Marshal(map[string]any{
-		"iss": s.srv.URL, "aud": "cid", "sub": "user-1", "email": "a@example.org", "email_verified": true, "groups": []string{"cockpit"},
+		"iss": s.srv.URL, "aud": "cid", "sub": "user-1", "email": "a@example.org", "email_verified": true, "groups": []string{"sitewatch"},
 		"nonce": nonce, "iat": time.Now().Unix(), "exp": time.Now().Add(time.Hour).Unix(),
 	})
 	in := b64(h) + "." + b64(p)
@@ -104,7 +104,7 @@ func callback(l *Login, c *http.Cookie, state string) *httptest.ResponseRecorder
 func setup(t *testing.T) (*Login, *stubIdP, *[]Identity) {
 	s := newStub(t)
 	var got []Identity
-	l, err := New(Config{Issuer: s.srv.URL, ClientID: "cid", ClientSecret: "sec", RedirectURL: "https://cockpit.test/callback"},
+	l, err := New(Config{Issuer: s.srv.URL, ClientID: "cid", ClientSecret: "sec", RedirectURL: "https://sitewatch.test/callback"},
 		func(w http.ResponseWriter, _ *http.Request, id Identity) {
 			got = append(got, id)
 			w.WriteHeader(http.StatusNoContent)
@@ -121,7 +121,7 @@ func TestFlowSuccess(t *testing.T) {
 	if rec := callback(l, c, state); rec.Code != http.StatusNoContent {
 		t.Fatalf("Code %d: %s", rec.Code, rec.Body)
 	}
-	if len(*got) != 1 || (*got)[0].Subject != "user-1" || (*got)[0].Groups[0] != "cockpit" {
+	if len(*got) != 1 || (*got)[0].Subject != "user-1" || (*got)[0].Groups[0] != "sitewatch" {
 		t.Fatalf("Identität: %+v", *got)
 	}
 }

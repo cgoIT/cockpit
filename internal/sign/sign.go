@@ -1,5 +1,5 @@
-// Package sign signiert die Konfiguration, die das Cockpit an Agenten ausliefert (Ed25519).
-// Der Agent kennt nur den öffentlichen Schlüssel (aus seiner lokalen Datei, nicht aus der Antwort des Cockpits) und prüft damit
+// Package sign signiert die Konfiguration, die Sitewatch an Agenten ausliefert (Ed25519).
+// Der Agent kennt nur den öffentlichen Schlüssel (aus seiner lokalen Datei, nicht aus der Antwort von Sitewatch) und prüft damit
 // Signatur, Agent, Ablauf und dass die Konfiguration nicht älter ist als die zuletzt akzeptierte.
 package sign
 
@@ -17,12 +17,12 @@ import (
 )
 
 // prefix trennt diese Signaturen von anderen Verwendungen desselben Schlüssels (z. B. spätere Aufträge).
-const prefix = "cockpit-agent-config-v1\n"
+const prefix = "sitewatch-agent-config-v1\n"
 
-// TTL ist die Gültigkeit einer ausgelieferten Konfiguration; solange darf der Agent sie ohne Cockpit weiterverwenden.
+// TTL ist die Gültigkeit einer ausgelieferten Konfiguration; solange darf der Agent sie ohne Sitewatch weiterverwenden.
 const TTL = 30 * 24 * time.Hour
 
-// maxSkew ist die erlaubte Uhrabweichung zwischen Cockpit und Agent.
+// maxSkew ist die erlaubte Uhrabweichung zwischen Sitewatch und Agent.
 const maxSkew = 10 * time.Minute
 
 // Envelope ist die Antwort der Config-API: der signierte Inhalt (JSON von Payload) und die Signatur.
@@ -124,7 +124,7 @@ func Verify(pub ed25519.PublicKey, env Envelope, agent string, now, notBefore ti
 }
 
 // jobPrefix trennt Aufträge von der Konfiguration: Eine Konfiguration lässt sich nie als Auftrag ausgeben und umgekehrt.
-const jobPrefix = "cockpit-agent-job-v1\n"
+const jobPrefix = "sitewatch-agent-job-v1\n"
 
 // JobPayload ist ein signierter Auftrag. Er gilt für genau einen Agenten, eine Site und eine Aktion aus der festen Liste
 // (internal/jobs); die ID verhindert, dass ein Auftrag zweimal läuft.

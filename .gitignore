@@ -9,3 +9,7 @@
 /token-*.txt
 /config.json
 *.config.json
+/build/
+/dist/
+/apt-site/
+/docs-intern/

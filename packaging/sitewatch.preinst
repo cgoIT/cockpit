@@ -1,0 +1,8 @@
+#!/bin/sh
+set -e
+# Der Dienst läuft als eigener Systembenutzer; /etc/sitewatch gehört der Gruppe (siehe sitewatch.yaml).
+if [ "$1" = install ] || [ "$1" = upgrade ]; then
+	if ! getent passwd sitewatch >/dev/null; then
+		adduser --system --group --home /var/lib/sitewatch --no-create-home --shell /usr/sbin/nologin sitewatch
+	fi
+fi

@@ -11,9 +11,9 @@ import (
 	"sync"
 	"time"
 
-	"cockpit/internal/agentcfg"
-	"cockpit/internal/auth"
-	"cockpit/internal/report"
+	"sitewatch/internal/agentcfg"
+	"sitewatch/internal/auth"
+	"sitewatch/internal/report"
 )
 
 type Agent struct {

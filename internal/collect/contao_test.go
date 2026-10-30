@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"cockpit/internal/report"
+	"sitewatch/internal/report"
 )
 
 func TestParseMigrate(t *testing.T) {

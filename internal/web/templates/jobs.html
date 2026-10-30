@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Cockpit – Aufträge</title>{{template "css"}}</head>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sitewatch – Aufträge</title>{{template "css"}}</head>
 <body>{{template "top" "jobs"}}
 <main>
 {{if .Error}}<div class="banner">{{.Error}}</div>{{end}}
@@ -22,4 +22,4 @@
   <tr><td class="mono"><a href="/jobs/{{.ID}}">{{.Created}}</a></td><td>{{.Site}}</td><td>{{.Label}}</td><td>{{.By}}</td><td><span class="badge {{.Class}}">{{.Status}}</span></td></tr>
   {{else}}<tr><td colspan="5" class="muted">Noch keine Aufträge.</td></tr>{{end}}</tbody>
 </table></div></section>
-</main></body></html>
+</main>{{template "foot"}}</body></html>

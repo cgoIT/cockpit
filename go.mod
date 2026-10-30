@@ -1,4 +1,4 @@
-module cockpit
+module sitewatch
 
 go 1.26.0
 

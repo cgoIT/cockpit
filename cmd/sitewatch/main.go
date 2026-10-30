@@ -1,9 +1,9 @@
-// Das Cockpit nimmt Reports der Agenten entgegen und zeigt den Zustand aller Sites.
+// Sitewatch nimmt Reports der Agenten entgegen und zeigt den Zustand aller Sites.
 //
-//	cockpit serve [-addr :8080] [-data ./data] [-tokens ./tokens.json] [-allow-group g] [-allow-sub s] [-allow-email e] [-trusted-proxy ip,cidr] [-no-login] [-alert-to a,b -alert-from x -alert-smtp host:port]
-//	cockpit pubkey [-data ./data]
-//	cockpit version
-//	cockpit token [-tokens ./tokens.json] [-kind contao|php|host] [-name n] [-url u] [-path p] [-rotate | -remove] <site-id>
+//	sitewatch serve [-addr :8080] [-data ./data] [-tokens ./tokens.json] [-allow-group g] [-allow-sub s] [-allow-email e] [-trusted-proxy ip,cidr] [-no-login] [-alert-to a,b -alert-from x -alert-smtp host:port]
+//	sitewatch pubkey [-data ./data]
+//	sitewatch version
+//	sitewatch token [-tokens ./tokens.json] [-kind contao|php|host] [-name n] [-url u] [-path p] [-rotate | -remove] <site-id>
 package main
 
 import (
@@ -21,16 +21,16 @@ import (
 	"strings"
 	"time"
 
-	"cockpit/internal/agents"
-	"cockpit/internal/alert"
-	"cockpit/internal/auth"
-	"cockpit/internal/eol"
-	"cockpit/internal/login"
-	"cockpit/internal/ratelimit"
-	"cockpit/internal/sign"
-	"cockpit/internal/status"
-	"cockpit/internal/store"
-	"cockpit/internal/web"
+	"sitewatch/internal/agents"
+	"sitewatch/internal/alert"
+	"sitewatch/internal/auth"
+	"sitewatch/internal/eol"
+	"sitewatch/internal/login"
+	"sitewatch/internal/ratelimit"
+	"sitewatch/internal/sign"
+	"sitewatch/internal/status"
+	"sitewatch/internal/store"
+	"sitewatch/internal/web"
 )
 
 // version wird beim Build per -ldflags "-X main.version=..." gesetzt (scripts/build.sh).
@@ -47,7 +47,7 @@ func main() {
 	}
 	switch cmd {
 	case "version":
-		fmt.Println("cockpit", version)
+		fmt.Println("sitewatch", version)
 	case "serve":
 		serve(args)
 	case "token":
@@ -55,7 +55,7 @@ func main() {
 	case "pubkey":
 		pubkey(args)
 	default:
-		fmt.Fprintln(os.Stderr, "Verwendung: cockpit serve | cockpit token <site-id> | cockpit pubkey | cockpit version")
+		fmt.Fprintln(os.Stderr, "Verwendung: sitewatch serve | sitewatch token <site-id> | sitewatch pubkey | sitewatch version")
 		os.Exit(2)
 	}
 }
@@ -73,10 +73,10 @@ func serve(args []string) {
 	proxies := fs.String("trusted-proxy", "", "IPs/CIDRs des Reverse-Proxys, dessen X-Forwarded-For für das Rate-Limit gilt (kommagetrennt)")
 	thresholds := fs.String("thresholds", "", "JSON-Datei mit Schwellwerten (siehe README); leer = Standardwerte")
 	useEOL := fs.Bool("eol", true, "Support-Enden täglich von endoflife.date abrufen (PHP, Contao, MariaDB, nginx); aus = nur die eingebaute PHP-Tabelle")
-	publicURL := fs.String("public-url", "", "Adresse des Cockpits für den Block der Agenten-Datei (z. B. https://cockpit.example); leer = https://<Host der Anfrage>")
+	publicURL := fs.String("public-url", "", "Adresse von Sitewatch für den Block der Agenten-Datei (z. B. https://sitewatch.example); leer = https://<Host der Anfrage>")
 	signKey := fs.String("signing-key", "", "privater Ed25519-Schlüssel für die Konfiguration der Agenten (Standard: <data>/signing.key, wird angelegt)")
 	agentsFile := fs.String("agents", "", "Datei mit Agenten und deren Konfiguration (Standard: <data>/agents.json)")
-	alertTo := fs.String("alert-to", "", "Empfänger der Alarm-E-Mails (kommagetrennt); leer = keine Alarmierung. SMTP-Zugang: COCKPIT_SMTP_USER/_PASSWORD in der Umgebung")
+	alertTo := fs.String("alert-to", "", "Empfänger der Alarm-E-Mails (kommagetrennt); leer = keine Alarmierung. SMTP-Zugang: SITEWATCH_SMTP_USER/_PASSWORD in der Umgebung")
 	alertFrom := fs.String("alert-from", "", "Absender der Alarm-E-Mails")
 	alertSMTP := fs.String("alert-smtp", "localhost:25", "SMTP-Server host:port (STARTTLS, wenn angeboten)")
 	alertEvery := fs.Duration("alert-interval", time.Minute, "Prüfintervall der Alarmierung")
@@ -97,7 +97,7 @@ func serve(args []string) {
 	if cfg, err = status.LoadThresholds(*thresholds, cfg); err != nil {
 		log.Fatalf("-thresholds: %v", err)
 	}
-	st, err := store.OpenSQLite(filepath.Join(*data, "cockpit.db"), cfg.Retention)
+	st, err := store.OpenSQLite(filepath.Join(*data, "sitewatch.db"), cfg.Retention)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -127,12 +127,13 @@ func serve(args []string) {
 			log.Fatal("-alert-to braucht -alert-from und -alert-smtp als host:port")
 		}
 		w := &alert.Watcher{Store: st, Config: cfg, Now: time.Now,
-			State: st, Send: alert.SMTP(*alertSMTP, os.Getenv("COCKPIT_SMTP_USER"), os.Getenv("COCKPIT_SMTP_PASSWORD"), *alertFrom, to)}
+			State: st, Send: alert.SMTP(*alertSMTP, os.Getenv("SITEWATCH_SMTP_USER"), os.Getenv("SITEWATCH_SMTP_PASSWORD"), *alertFrom, to)}
 		go w.Run(context.Background(), *alertEvery)
 	} else {
 		log.Print("Hinweis: keine Alarmierung (-alert-to nicht gesetzt)")
 	}
 	srv := web.New(st, *tokens, cfg)
+	srv.Version = version
 	if srv.SignKey, err = sign.LoadOrCreateKey(*signKey); err != nil {
 		log.Fatalf("-signing-key: %v", err)
 	}
@@ -150,7 +151,7 @@ func serve(args []string) {
 		Addr: *addr, Handler: accessLog(limited(handler, px), px),
 		ReadHeaderTimeout: 10 * time.Second, ReadTimeout: 30 * time.Second, WriteTimeout: 30 * time.Second,
 	}
-	log.Printf("Cockpit %s läuft auf http://%s", version, *addr)
+	log.Printf("Sitewatch %s läuft auf http://%s", version, *addr)
 	log.Fatal(hs.ListenAndServe())
 }
 
@@ -181,7 +182,7 @@ func token(args []string) {
 	remove := fs.Bool("remove", false, "Token der Site löschen (der Agent mit diesem Token bekommt 401); z. B. vor der Umstellung auf einen Agenten im Dashboard")
 	_ = fs.Parse(args)
 	if fs.NArg() != 1 || (*remove && *rotate) || (*kind != "contao" && *kind != "php" && *kind != "host") {
-		fmt.Fprintln(os.Stderr, "Verwendung: cockpit token [-tokens datei] [-kind contao|php|host] [-name n] [-url u] [-path p] [-rotate | -remove] <site-id>")
+		fmt.Fprintln(os.Stderr, "Verwendung: sitewatch token [-tokens datei] [-kind contao|php|host] [-name n] [-url u] [-path p] [-rotate | -remove] <site-id>")
 		os.Exit(2)
 	}
 	id := fs.Arg(0)
@@ -235,8 +236,8 @@ func configBlock(id, name, kind, siteURL, path, token string) string {
 }
 
 // withLogin schützt die Oberfläche per OIDC. Geheimnisse kommen aus der Umgebung, nicht aus Flags (sichtbar in der Prozessliste):
-// COCKPIT_OIDC_ISSUER, COCKPIT_OIDC_CLIENT_ID, COCKPIT_OIDC_CLIENT_SECRET, COCKPIT_OIDC_REDIRECT_URL,
-// COCKPIT_SESSION_KEY (hex, mind. 32 Byte, z. B. `openssl rand -hex 32`).
+// SITEWATCH_OIDC_ISSUER, SITEWATCH_OIDC_CLIENT_ID, SITEWATCH_OIDC_CLIENT_SECRET, SITEWATCH_OIDC_REDIRECT_URL,
+// SITEWATCH_SESSION_KEY (hex, mind. 32 Byte, z. B. `openssl rand -hex 32`).
 func withLogin(srv *web.Server, acc login.Access) http.Handler {
 	if err := acc.Validate(); err != nil {
 		log.Fatal(err)
@@ -248,19 +249,19 @@ func withLogin(srv *web.Server, acc login.Access) http.Handler {
 		}
 		return v
 	}
-	key, err := hex.DecodeString(env("COCKPIT_SESSION_KEY"))
+	key, err := hex.DecodeString(env("SITEWATCH_SESSION_KEY"))
 	if err != nil {
-		log.Fatal("COCKPIT_SESSION_KEY ist kein Hex-String")
+		log.Fatal("SITEWATCH_SESSION_KEY ist kein Hex-String")
 	}
-	redirect := env("COCKPIT_OIDC_REDIRECT_URL")
+	redirect := env("SITEWATCH_OIDC_REDIRECT_URL")
 	sessions, err := login.NewSessions(key, 12*time.Hour, strings.HasPrefix(redirect, "https://"))
 	if err != nil {
 		log.Fatal(err)
 	}
 	sessions.Allow = acc.Allows // Rechte bei jedem Zugriff neu prüfen, nicht nur beim Login
 	lg, err := login.New(login.Config{
-		Issuer: env("COCKPIT_OIDC_ISSUER"), ClientID: env("COCKPIT_OIDC_CLIENT_ID"),
-		ClientSecret: env("COCKPIT_OIDC_CLIENT_SECRET"), RedirectURL: redirect,
+		Issuer: env("SITEWATCH_OIDC_ISSUER"), ClientID: env("SITEWATCH_OIDC_CLIENT_ID"),
+		ClientSecret: env("SITEWATCH_OIDC_CLIENT_SECRET"), RedirectURL: redirect,
 	}, func(w http.ResponseWriter, r *http.Request, id login.Identity) {
 		if !acc.Allows(id) {
 			log.Printf("login: Zugriff verweigert für %q (Gruppen im Token: %q)", id.Subject, id.Groups)

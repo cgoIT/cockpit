@@ -1,0 +1,34 @@
+# nfpm-Konfiguration für das Debian-Paket "sitewatch"; gebaut von scripts/build-deb.sh (ARCH und VERSION kommen aus der Umgebung).
+name: sitewatch
+arch: ${ARCH}
+platform: linux
+version: ${VERSION}
+section: admin
+priority: optional
+maintainer: cgoIT <kontakt@cgo-it.de>
+description: |
+  Sitewatch zur Überwachung und Wartung von Contao-/PHP-Websites
+  Nimmt die Reports der Agenten entgegen und zeigt den Zustand aller Sites.
+  Nach der Installation /etc/sitewatch/sitewatch.env ausfüllen und den Dienst starten.
+homepage: https://github.com/cgoIT/sitewatch
+license: AGPL-3.0
+contents:
+  - dst: /etc/sitewatch
+    type: dir
+    file_info: {mode: 0750, owner: root, group: sitewatch}
+  - src: build/sitewatch
+    dst: /usr/bin/sitewatch
+    file_info: {mode: 0755}
+  - src: scripts/systemd/sitewatch.service
+    dst: /lib/systemd/system/sitewatch.service
+  - src: scripts/systemd/sitewatch.env.example
+    dst: /etc/sitewatch/sitewatch.env
+    type: config|noreplace
+    file_info: {mode: 0640, owner: root, group: sitewatch}
+  - src: LICENSE
+    dst: /usr/share/doc/sitewatch/copyright
+scripts:
+  preinstall: packaging/sitewatch.preinst
+  postinstall: packaging/sitewatch.postinst
+  preremove: packaging/sitewatch.prerm
+  postremove: packaging/postrm

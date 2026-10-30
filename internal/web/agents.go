@@ -13,13 +13,13 @@ import (
 	"strings"
 	"time"
 
-	"cockpit/internal/agentcfg"
-	"cockpit/internal/agents"
-	"cockpit/internal/auth"
-	"cockpit/internal/jobs"
-	"cockpit/internal/report"
-	"cockpit/internal/sign"
-	"cockpit/internal/status"
+	"sitewatch/internal/agentcfg"
+	"sitewatch/internal/agents"
+	"sitewatch/internal/auth"
+	"sitewatch/internal/jobs"
+	"sitewatch/internal/report"
+	"sitewatch/internal/sign"
+	"sitewatch/internal/status"
 )
 
 // siteIDs: alle bekannten Sites, auch die ohne Meldung (Token je Site und Sites der Agenten), sortiert und ohne Doppelte.
@@ -138,7 +138,7 @@ func (s *Server) fetchedText(id string) string {
 	if t, ok := s.fetched[id]; ok {
 		return status.Ago(s.Now().Sub(t))
 	}
-	return "noch nicht (seit dem Start des Cockpits)"
+	return "noch nicht (seit dem Start von Sitewatch)"
 }
 
 func (s *Server) agentList(w http.ResponseWriter, r *http.Request) {
@@ -164,8 +164,23 @@ func (s *Server) agentCreate(w http.ResponseWriter, r *http.Request) {
 	s.showToken(w, r, id, tok)
 }
 
+const dockerWrapperDir = "/usr/share/sitewatch-agent/docker/" // Ziel der Pakete sitewatch-agent, siehe packaging/
+
+// dockerTools liefert für die angekreuzten Programme (Formularfelder docker_<name>) den Wrapper aus dem Paket;
+// nicht angekreuzte laufen direkt auf dem Host und brauchen keinen Eintrag.
+func dockerTools(r *http.Request) []map[string]string {
+	var out []map[string]string
+	for _, n := range []string{"composer", "php", "nginx", "mariadb"} {
+		if r.FormValue("docker_"+n) != "" {
+			out = append(out, map[string]string{"Name": n, "Path": dockerWrapperDir + n + "-in-docker"})
+		}
+	}
+	return out
+}
+
 // showToken zeigt das neue Token einmalig mit dem Block für die lokale Datei des Agenten.
 func (s *Server) showToken(w http.ResponseWriter, r *http.Request, id, tok string) {
+	tools := dockerTools(r)
 	base := strings.TrimRight(s.PublicURL, "/")
 	if base == "" { // ohne -public-url zählt der Host der Anfrage; X-Forwarded-Proto wird bewusst nicht ausgewertet
 		base = "https://" + r.Host
@@ -175,7 +190,7 @@ func (s *Server) showToken(w http.ResponseWriter, r *http.Request, id, tok strin
 	}
 	w.Header().Set("Cache-Control", "no-store")
 	pub := sign.EncodePublicKey(s.SignKey.Public().(ed25519.PublicKey))
-	s.render(w, "agent_token.html", map[string]any{"ID": id, "Jobs": s.jobsUI(), "Token": tok, "Cockpit": base, "PublicKey": pub})
+	s.render(w, "agent_token.html", map[string]any{"ID": id, "Jobs": s.jobsUI(), "Token": tok, "Sitewatch": base, "PublicKey": pub, "Tools": tools})
 }
 
 type siteForm struct {
@@ -293,7 +308,7 @@ func (s *Server) agentSave(w http.ResponseWriter, r *http.Request) {
 		for _, st := range cfg.Sites {
 			for _, id := range ids {
 				if st.ID == id {
-					s.editPage(w, a, cfg, fmt.Sprintf("Site %q hat noch ein eigenes Token; erst mit „cockpit token -remove %s“ löschen", id, id), http.StatusUnprocessableEntity)
+					s.editPage(w, a, cfg, fmt.Sprintf("Site %q hat noch ein eigenes Token; erst mit „sitewatch token -remove %s“ löschen", id, id), http.StatusUnprocessableEntity)
 					return
 				}
 			}

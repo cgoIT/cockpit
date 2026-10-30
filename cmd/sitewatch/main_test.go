@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"cockpit/internal/agentcfg"
+	"sitewatch/internal/agentcfg"
 )
 
 func TestConfigBlock(t *testing.T) {
@@ -33,7 +33,7 @@ func TestConfigBlockLoadsInAgentConfig(t *testing.T) {
 		configBlock("web", "Meine Web", "contao", "https://example.org", "/srv/web", "t1"),
 		configBlock("host-a", "", "host", "", "", "t2"),
 	}
-	doc := `{"cockpit":"https://c.example","sites":[` + strings.Join(blocks, ",") + `]}`
+	doc := `{"sitewatch":"https://c.example","sites":[` + strings.Join(blocks, ",") + `]}`
 	p := filepath.Join(t.TempDir(), "config.json")
 	if err := os.WriteFile(p, []byte(doc), 0o600); err != nil {
 		t.Fatal(err)
@@ -46,7 +46,7 @@ func TestConfigBlockLoadsInAgentConfig(t *testing.T) {
 		t.Errorf("%+v", c.Sites)
 	}
 	// Der Platzhalter muss vom Agent abgelehnt werden.
-	bad := `{"cockpit":"https://c.example","sites":[` + configBlock("web", "", "contao", "", "", "t") + `]}`
+	bad := `{"sitewatch":"https://c.example","sites":[` + configBlock("web", "", "contao", "", "", "t") + `]}`
 	if err := os.WriteFile(p, []byte(bad), 0o600); err != nil {
 		t.Fatal(err)
 	}

@@ -13,11 +13,11 @@ import (
 	"strings"
 	"time"
 
-	"cockpit/internal/agents"
-	"cockpit/internal/jobs"
-	"cockpit/internal/sign"
-	"cockpit/internal/status"
-	"cockpit/internal/store"
+	"sitewatch/internal/agents"
+	"sitewatch/internal/jobs"
+	"sitewatch/internal/sign"
+	"sitewatch/internal/status"
+	"sitewatch/internal/store"
 )
 
 const (
@@ -61,7 +61,7 @@ func (s *Server) announced(agent string) (announce, bool) {
 	return a, ok && s.Now().Sub(a.At) < announceFresh
 }
 
-// actionOffered: der Agent ist erreichbar und hat die Aktion lokal erlaubt. Das Cockpit bietet nur Aufträge an, die der Agent annimmt.
+// actionOffered: der Agent ist erreichbar und hat die Aktion lokal erlaubt. Sitewatch bietet nur Aufträge an, die der Agent annimmt.
 func (s *Server) actionOffered(agent, action string) bool {
 	a, ok := s.announced(agent)
 	if ok {
@@ -115,7 +115,7 @@ func (s *Server) bearerAgent(w http.ResponseWriter, r *http.Request) (agents.Age
 	return a, ok
 }
 
-// jobPoll liefert dem Agenten den ältesten wartenden Auftrag. Gibt es keinen, hält das Cockpit die Anfrage bis zu ?wait Sekunden offen
+// jobPoll liefert dem Agenten den ältesten wartenden Auftrag. Gibt es keinen, hält Sitewatch die Anfrage bis zu ?wait Sekunden offen
 // und antwortet sofort, sobald ein Auftrag freigegeben wird (Long-Polling: der Agent baut die Verbindung aus, auf dem Server ist kein Port offen).
 func (s *Server) jobPoll(w http.ResponseWriter, r *http.Request) {
 	a, ok := s.bearerAgent(w, r)
@@ -126,7 +126,7 @@ func (s *Server) jobPoll(w http.ResponseWriter, r *http.Request) {
 	if n, err := strconv.Atoi(r.URL.Query().Get("wait")); err == nil && n >= 0 && time.Duration(n)*time.Second < wait {
 		wait = time.Duration(n) * time.Second
 	}
-	var acts []string // der Agent nennt, was er lokal erlaubt; das Cockpit bietet nur das an
+	var acts []string // der Agent nennt, was er lokal erlaubt; Sitewatch bietet nur das an
 	for _, x := range strings.Split(r.URL.Query().Get("actions"), ",") {
 		if _, ok := jobs.Find(x); ok && !slices.Contains(acts, x) {
 			acts = append(acts, x)
@@ -170,7 +170,7 @@ type jobEvent struct {
 
 var finalStates = map[string]string{"ok": store.JobOK, "failed": store.JobFailed, "canceled": store.JobCanceled, "rejected": store.JobRejected}
 
-// jobEvents nimmt Zustand und Ausgabe des Agenten entgegen. "running" ist zugleich die Rückfrage vor dem Start: Antwortet das Cockpit
+// jobEvents nimmt Zustand und Ausgabe des Agenten entgegen. "running" ist zugleich die Rückfrage vor dem Start: Antwortet Sitewatch
 // mit cancel, führt der Agent nichts aus (so läuft ein zwischenzeitlich abgebrochener Auftrag nicht mehr an).
 func (s *Server) jobEvents(w http.ResponseWriter, r *http.Request) {
 	a, ok := s.bearerAgent(w, r)
@@ -492,7 +492,7 @@ func (s *Server) jobShow(w http.ResponseWriter, r *http.Request) {
 	lb, cl := jobStatus(j, now)
 	nonce := newJobID()
 	// Nur diese Seite darf ein Skript ausführen (Nonce), und nur zur eigenen Adresse (EventSource). Alle anderen Seiten bleiben ohne JavaScript.
-	w.Header().Set("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; script-src 'nonce-"+nonce+"'; connect-src 'self'; base-uri 'none'; form-action 'self'")
+	w.Header().Set("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; img-src 'self'; manifest-src 'self'; script-src 'nonce-"+nonce+"'; connect-src 'self'; base-uri 'none'; form-action 'self'")
 	s.render(w, "job.html", map[string]any{
 		"Job": j, "Label": actionLabel(j.Action), "Status": lb, "Class": cl, "Output": store.Text(chunks), "Last": last,
 		"Live": !jobEnded(j, now), "Nonce": nonce, "Created": fmtStamp(j.CreatedAt), "Top": "jobs",

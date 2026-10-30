@@ -18,7 +18,7 @@ import (
 	"strings"
 	"time"
 
-	"cockpit/internal/report"
+	"sitewatch/internal/report"
 )
 
 // Config steuert die Datensammlung für eine Site.

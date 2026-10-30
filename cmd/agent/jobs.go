@@ -18,18 +18,18 @@ import (
 	"sync"
 	"time"
 
-	"cockpit/internal/agentcfg"
-	"cockpit/internal/collect"
-	"cockpit/internal/jobs"
-	"cockpit/internal/sign"
+	"sitewatch/internal/agentcfg"
+	"sitewatch/internal/collect"
+	"sitewatch/internal/jobs"
+	"sitewatch/internal/sign"
 )
 
 const (
-	pollWait    = 20 * time.Second // so lange hält das Cockpit eine Anfrage offen (siehe web.pollMax)
+	pollWait    = 20 * time.Second // so lange hält Sitewatch eine Anfrage offen (siehe web.pollMax)
 	flushEvery  = 500 * time.Millisecond
 	heartbeat   = 2 * time.Second // auch ohne Ausgabe melden, damit ein Abbruch schnell ankommt
 	chunkSize   = 16 << 10
-	maxBuffered = 512 << 10 // mehr Ausgabe wird verworfen (das Cockpit speichert ohnehin nur 256 KB)
+	maxBuffered = 512 << 10 // mehr Ausgabe wird verworfen (Sitewatch speichert ohnehin nur 256 KB)
 	perPost     = 100       // Blöcke je Anfrage
 )
 
@@ -47,7 +47,7 @@ func (c *current) get() (agentcfg.Config, bool) {
 	return c.c, c.ok
 }
 
-// jobRunner holt Aufträge beim Cockpit ab (Long-Polling, nur ausgehende Verbindungen) und führt sie aus.
+// jobRunner holt Aufträge bei Sitewatch ab (Long-Polling, nur ausgehende Verbindungen) und führt sie aus.
 type jobRunner struct {
 	bs     agentcfg.Bootstrap
 	client *http.Client // Timeout länger als pollWait
@@ -60,7 +60,7 @@ type jobRunner struct {
 }
 
 func newJobRunner(bs agentcfg.Bootstrap, cur *current, kick chan<- string) *jobRunner {
-	// Keine Umleitungen verfolgen: Eine Antwort des Cockpits mit Umleitung (Login-Seite) ist ein Fehler, kein JSON.
+	// Keine Umleitungen verfolgen: Eine Antwort von Sitewatch mit Umleitung (Login-Seite) ist ein Fehler, kein JSON.
 	client := &http.Client{Timeout: pollWait + 15*time.Second, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
 	return &jobRunner{bs: bs, client: client, cur: cur, kick: kick,
 		seen: seenFile{filepath.Join(bs.State, "jobs_seen")}, now: time.Now}
@@ -103,7 +103,7 @@ func sleep(ctx context.Context, d time.Duration) {
 	}
 }
 
-func (r *jobRunner) url(path string) string { return strings.TrimRight(r.bs.Cockpit, "/") + path }
+func (r *jobRunner) url(path string) string { return strings.TrimRight(r.bs.Sitewatch, "/") + path }
 
 func (r *jobRunner) poll(ctx context.Context) ([]sign.Envelope, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, r.url(fmt.Sprintf("/api/v1/agent/jobs?wait=%d&actions=%s", int(pollWait.Seconds()), url.QueryEscape(strings.Join(r.bs.Actions, ",")))), nil)
@@ -139,14 +139,14 @@ type event struct {
 	Chunks  []chunk `json:"chunks,omitempty"`
 }
 
-// statusError beschreibt eine unerwartete Antwort. Eine Umleitung heißt meist: Das Cockpit kennt den Pfad nicht (ältere Version)
+// statusError beschreibt eine unerwartete Antwort. Eine Umleitung heißt meist: Sitewatch kennt den Pfad nicht (ältere Version)
 // oder ein Reverse-Proxy lässt ihn nicht durch, und die Anfrage landet beim Login.
 func statusError(resp *http.Response) error {
 	if resp.StatusCode/100 == 3 {
-		return fmt.Errorf("Cockpit leitet um (%d nach %q): läuft dort die neue Version, und lässt der Reverse-Proxy /api/v1/agent/jobs durch?", resp.StatusCode, resp.Header.Get("Location"))
+		return fmt.Errorf("Sitewatch leitet um (%d nach %q): läuft dort die neue Version, und lässt der Reverse-Proxy /api/v1/agent/jobs durch?", resp.StatusCode, resp.Header.Get("Location"))
 	}
 	msg, _ := io.ReadAll(io.LimitReader(resp.Body, 300))
-	return fmt.Errorf("Cockpit antwortet %d: %s", resp.StatusCode, strings.TrimSpace(string(msg)))
+	return fmt.Errorf("Sitewatch antwortet %d: %s", resp.StatusCode, strings.TrimSpace(string(msg)))
 }
 
 // post meldet Zustand/Ausgabe. Die Antwort sagt, ob der Auftrag abgebrochen werden soll.
@@ -171,7 +171,7 @@ func (r *jobRunner) post(ctx context.Context, id string, ev event) (cancel bool,
 	return out.Cancel, err
 }
 
-// postFinal meldet das Ende mit ein paar Wiederholungen: Geht es verloren, bliebe der Auftrag im Cockpit "läuft".
+// postFinal meldet das Ende mit ein paar Wiederholungen: Geht es verloren, bliebe der Auftrag in Sitewatch "läuft".
 func (r *jobRunner) postFinal(ctx context.Context, id string, ev event) {
 	for i := 0; i < 4; i++ {
 		if _, err := r.post(ctx, id, ev); err == nil {
@@ -192,14 +192,14 @@ func (r *jobRunner) reject(ctx context.Context, id, why string) {
 	}
 }
 
-// handle prüft einen Auftrag und führt ihn aus. Reihenfolge mit Absicht: erst alles prüfen, dann beim Cockpit rückfragen
+// handle prüft einen Auftrag und führt ihn aus. Reihenfolge mit Absicht: erst alles prüfen, dann bei Sitewatch rückfragen
 // ("running", dort kann der Auftrag inzwischen abgebrochen sein), erst danach als gesehen vermerken und starten.
 func (r *jobRunner) handle(ctx context.Context, env sign.Envelope) {
 	now := r.now()
 	p, err := sign.VerifyJob(r.bs.PublicKey, env, r.bs.Agent, now)
 	if err != nil {
 		var lenient struct{ ID string }
-		_ = json.Unmarshal(env.Payload, &lenient) // nur für die Meldung an das Cockpit, vertraut wird dem Inhalt nicht
+		_ = json.Unmarshal(env.Payload, &lenient) // nur für die Meldung an Sitewatch, vertraut wird dem Inhalt nicht
 		r.reject(ctx, lenient.ID, err.Error())
 		return
 	}
@@ -231,7 +231,7 @@ func (r *jobRunner) handle(ctx context.Context, env sign.Envelope) {
 		return
 	}
 	if !slices.Contains(site.Actions, p.Action) {
-		r.reject(ctx, p.ID, fmt.Sprintf("Aktion %q ist für die Site %q im Cockpit nicht freigegeben", p.Action, p.Site))
+		r.reject(ctx, p.ID, fmt.Sprintf("Aktion %q ist für die Site %q in Sitewatch nicht freigegeben", p.Action, p.Site))
 		return
 	}
 	if !act.AllowsKind(site.Kind) {
@@ -246,8 +246,8 @@ func (r *jobRunner) handle(ctx context.Context, env sign.Envelope) {
 
 	cancel, err := r.post(ctx, p.ID, event{State: "running"})
 	if err != nil {
-		log.Printf("Auftrag %s: Rückfrage beim Cockpit fehlgeschlagen, nichts ausgeführt: %v", p.ID, err)
-		return // das Cockpit liefert ihn erneut aus (wartend bis zum Ablauf, laufend ohne Ausgabe 2 Minuten lang)
+		log.Printf("Auftrag %s: Rückfrage bei Sitewatch fehlgeschlagen, nichts ausgeführt: %v", p.ID, err)
+		return // Sitewatch liefert ihn erneut aus (wartend bis zum Ablauf, laufend ohne Ausgabe 2 Minuten lang)
 	}
 	if err := r.seen.add(p.ID, p.ExpiresAt, now); err != nil {
 		r.postFinal(ctx, p.ID, event{State: "failed", Message: "Zustand der Aufträge nicht schreibbar, nichts ausgeführt: " + err.Error()})
@@ -272,9 +272,9 @@ func commandFor(act jobs.Action, site agentcfg.Site, cfg agentcfg.Config, roots 
 	if len(act.Site) > 0 {
 		dir = site.Env["SITE_DIR"]
 		if dir == "" {
-			return "", nil, "", errors.New("SITE_DIR fehlt in der Konfiguration der Site (Feld „SITE_DIR“ im Cockpit)")
+			return "", nil, "", errors.New("SITE_DIR fehlt in der Konfiguration der Site (Feld „SITE_DIR“ in Sitewatch)")
 		}
-		// SITE_DIR kommt aus der Konfiguration des Cockpits, das Werkzeug läuft als der Agent-Benutzer (meist root): Es muss zur Site gehören,
+		// SITE_DIR kommt aus der Konfiguration von Sitewatch, das Werkzeug läuft als der Agent-Benutzer (meist root): Es muss zur Site gehören,
 		// nach Auflösen von Symlinks noch unter roots liegen und eine normale Datei sein.
 		if rel, err := filepath.Rel(dir, site.Path); err != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
 			return "", nil, "", fmt.Errorf("SITE_DIR %q enthält den Pfad der Site %q nicht", dir, site.Path)
@@ -317,7 +317,7 @@ func insideRoots(path string, roots []string) bool {
 	return false
 }
 
-// run startet die Aktion und streamt die Ausgabe ans Cockpit.
+// run startet die Aktion und streamt die Ausgabe an Sitewatch.
 func (r *jobRunner) run(ctx context.Context, p sign.JobPayload, act jobs.Action, site agentcfg.Site, prog string, args []string, dir string) {
 	runCtx, stopRun := context.WithTimeout(ctx, act.Limit())
 	defer stopRun()
@@ -334,7 +334,7 @@ func (r *jobRunner) run(ctx context.Context, p sign.JobPayload, act jobs.Action,
 	var mu sync.Mutex
 	done := make(chan struct{})
 	flushed := make(chan struct{})
-	go func() { // Ausgabe und Lebenszeichen ans Cockpit; die Antwort kann den Abbruch verlangen
+	go func() { // Ausgabe und Lebenszeichen an Sitewatch; die Antwort kann den Abbruch verlangen
 		defer close(flushed)
 		t := time.NewTicker(flushEvery)
 		defer t.Stop()
@@ -410,7 +410,7 @@ const (
 	escOSC   // in ESC ] ...
 )
 
-// outBuf sammelt die Ausgabe des Prozesses und teilt sie in nummerierte Blöcke. Vorgemerkte Blöcke bleiben, bis das Cockpit sie bestätigt hat.
+// outBuf sammelt die Ausgabe des Prozesses und teilt sie in nummerierte Blöcke. Vorgemerkte Blöcke bleiben, bis Sitewatch sie bestätigt hat.
 type outBuf struct {
 	mu      sync.Mutex
 	buf     []byte

@@ -11,8 +11,8 @@ import (
 	"testing"
 	"time"
 
-	"cockpit/internal/agentcfg"
-	"cockpit/internal/sign"
+	"sitewatch/internal/agentcfg"
+	"sitewatch/internal/sign"
 )
 
 func TestLoadRemote(t *testing.T) {
@@ -32,7 +32,7 @@ func TestLoadRemote(t *testing.T) {
 		_ = json.NewEncoder(w).Encode(env)
 	}))
 	defer ts.Close()
-	bs := agentcfg.Bootstrap{Cockpit: ts.URL, Agent: "server1", Token: "tok", PublicKey: pub, State: t.TempDir(), Roots: []string{"/var/www"}}
+	bs := agentcfg.Bootstrap{Sitewatch: ts.URL, Agent: "server1", Token: "tok", PublicKey: pub, State: t.TempDir(), Roots: []string{"/var/www"}}
 	ctx := context.Background()
 	c := &http.Client{Timeout: time.Second}
 
@@ -42,7 +42,7 @@ func TestLoadRemote(t *testing.T) {
 	if _, err := readCacheFor(bs); err != nil {
 		t.Fatal("Zwischenspeicher fehlt")
 	}
-	// Cockpit nicht erreichbar: der Zwischenspeicher gilt.
+	// Sitewatch nicht erreichbar: der Zwischenspeicher gilt.
 	up = false
 	if r, err := loadRemote(ctx, c, bs, now.Add(24*time.Hour)); err != nil || len(r.Sites) != 1 {
 		t.Fatalf("Ausfall: %v", err)
@@ -68,7 +68,7 @@ func TestLoadRemote(t *testing.T) {
 	if _, err := loadRemote(ctx, c, bs, now.Add(2*time.Hour)); err == nil {
 		t.Error("Rollback nach Löschen des Zwischenspeichers muss abgelehnt werden")
 	}
-	// Falscher Schlüssel (Cockpit-Imitation) und kein Zwischenspeicher: keine Konfiguration.
+	// Falscher Schlüssel (Sitewatch-Imitation) und kein Zwischenspeicher: keine Konfiguration.
 	other, _, _ := ed25519.GenerateKey(nil)
 	bs2 := bs
 	bs2.PublicKey, bs2.State = other, t.TempDir()

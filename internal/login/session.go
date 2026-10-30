@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-const sessionCookie = "cockpit_session"
+const sessionCookie = "sitewatch_session"
 
 // Sessions verwaltet Login-Sitzungen als signiertes Cookie (HMAC-SHA256, ohne serverseitigen Speicher).
 // shortcut: keine serverseitige Sperrliste, eine Sitzung lässt sich vor Ablauf nur durch Wechsel des Schlüssels beenden; bei Bedarf in den SQLite-Store verlagern.
@@ -112,6 +112,6 @@ func (s *Sessions) Logout(w http.ResponseWriter, _ *http.Request) {
 	h.Set("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'")
 	h.Set("X-Content-Type-Options", "nosniff")
 	h.Set("Cache-Control", "no-store")
-	io.WriteString(w, `<!doctype html><html lang="de"><meta charset="utf-8"><title>Cockpit – Abgemeldet</title>
+	io.WriteString(w, `<!doctype html><html lang="de"><meta charset="utf-8"><title>Sitewatch – Abgemeldet</title>
 <body style="font:16px system-ui;margin:3rem auto;max-width:28rem"><p>Du bist abgemeldet.</p><p><a href="/login">Erneut anmelden</a></p></body></html>`)
 }

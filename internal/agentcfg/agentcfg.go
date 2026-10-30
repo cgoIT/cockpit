@@ -15,8 +15,8 @@ import (
 	"strings"
 	"time"
 
-	"cockpit/internal/jobs"
-	"cockpit/internal/report"
+	"sitewatch/internal/jobs"
+	"sitewatch/internal/report"
 )
 
 // Site beschreibt eine zu überwachende Site (oder den Host).
@@ -42,19 +42,19 @@ type Site struct {
 }
 
 type file struct {
-	Cockpit  string `json:"cockpit"`
-	Interval string `json:"interval"`
-	Spool    string `json:"spool"`
-	Composer string `json:"composer"`
-	PHP      string `json:"php"`
-	Nginx    string `json:"nginx"`   // wie php: Programm für `nginx -v` (nicht für kind=host)
-	MariaDB  string `json:"mariadb"` // Programm für `mariadb --version` (nicht für kind=host)
-	Sites    []Site `json:"sites"`
+	Sitewatch string `json:"sitewatch"`
+	Interval  string `json:"interval"`
+	Spool     string `json:"spool"`
+	Composer  string `json:"composer"`
+	PHP       string `json:"php"`
+	Nginx     string `json:"nginx"`   // wie php: Programm für `nginx -v` (nicht für kind=host)
+	MariaDB   string `json:"mariadb"` // Programm für `mariadb --version` (nicht für kind=host)
+	Sites     []Site `json:"sites"`
 }
 
 // Config ist die geprüfte Konfiguration. Die Tokens der Sites sind bereits aufgelöst.
 type Config struct {
-	Cockpit        string
+	Sitewatch      string
 	Interval       time.Duration
 	Spool          string
 	Composer, PHP  string
@@ -62,7 +62,7 @@ type Config struct {
 	Sites          []Site
 }
 
-// MinInterval verhindert, dass ein Tippfehler das Cockpit überflutet.
+// MinInterval verhindert, dass ein Tippfehler Sitewatch überflutet.
 const MinInterval = 30 * time.Second
 
 // Load liest und prüft die Datei. Sie enthält Tokens und darf deshalb für andere nicht lesbar sein (chmod 600).
@@ -80,8 +80,8 @@ func Load(path string) (Config, error) {
 	if dec.More() {
 		return Config{}, fmt.Errorf("%s: unerwartete Daten nach dem JSON-Dokument", path)
 	}
-	c := Config{Cockpit: f.Cockpit, Spool: f.Spool, Composer: f.Composer, PHP: f.PHP, Nginx: f.Nginx, MariaDB: f.MariaDB, Sites: f.Sites, Interval: 5 * time.Minute}
-	if err := CheckCockpitURL(c.Cockpit); err != nil {
+	c := Config{Sitewatch: f.Sitewatch, Spool: f.Spool, Composer: f.Composer, PHP: f.PHP, Nginx: f.Nginx, MariaDB: f.MariaDB, Sites: f.Sites, Interval: 5 * time.Minute}
+	if err := CheckSitewatchURL(c.Sitewatch); err != nil {
 		return Config{}, err
 	}
 	if f.Interval != "" {
@@ -242,17 +242,17 @@ func needAbs(what, p string) error {
 	return nil
 }
 
-// CheckCockpitURL verlangt https; http ist nur für Loopback erlaubt (lokale Tests), damit kein Token im Klartext reist.
-func CheckCockpitURL(raw string) error {
+// CheckSitewatchURL verlangt https; http ist nur für Loopback erlaubt (lokale Tests), damit kein Token im Klartext reist.
+func CheckSitewatchURL(raw string) error {
 	u, err := url.Parse(raw)
 	if err != nil || u.Host == "" {
-		return fmt.Errorf("cockpit-URL %q ungültig", raw)
+		return fmt.Errorf("sitewatch-URL %q ungültig", raw)
 	}
 	switch h := u.Hostname(); {
 	case u.Scheme == "https":
 	case u.Scheme == "http" && (h == "localhost" || h == "127.0.0.1" || h == "::1"):
 	default:
-		return fmt.Errorf("cockpit-URL %q muss https sein", raw)
+		return fmt.Errorf("sitewatch-URL %q muss https sein", raw)
 	}
 	return nil
 }

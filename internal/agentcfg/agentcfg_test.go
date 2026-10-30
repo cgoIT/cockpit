@@ -16,7 +16,7 @@ func write(t *testing.T, name, content string, mode os.FileMode) string {
 	return p
 }
 
-const base = `{"cockpit":"https://c.example","interval":"2m","spool":"/var/spool/x","sites":[
+const base = `{"sitewatch":"https://c.example","interval":"2m","spool":"/var/spool/x","sites":[
  {"id":"host-a","kind":"host","token":"t1"},
  {"id":"web-a","kind":"contao","path":"/srv/web-a","env":{"SITE_DIR":"/srv/web-a-dir"},"token":"t2"}]}`
 
@@ -35,12 +35,12 @@ func TestLoadOK(t *testing.T) {
 
 func TestTokenFile(t *testing.T) {
 	tf := write(t, "tok", "geheim\n", 0o600)
-	c, err := Load(write(t, "c.json", `{"cockpit":"https://c.example","sites":[{"id":"h","kind":"host","token_file":"`+tf+`"}]}`, 0o600))
+	c, err := Load(write(t, "c.json", `{"sitewatch":"https://c.example","sites":[{"id":"h","kind":"host","token_file":"`+tf+`"}]}`, 0o600))
 	if err != nil || c.Sites[0].Token != "geheim" || c.Interval != 5*time.Minute {
 		t.Fatalf("%+v %v", c, err)
 	}
 	open := write(t, "tok2", "geheim", 0o644)
-	if _, err := Load(write(t, "c2.json", `{"cockpit":"https://c.example","sites":[{"id":"h","kind":"host","token_file":"`+open+`"}]}`, 0o600)); err == nil {
+	if _, err := Load(write(t, "c2.json", `{"sitewatch":"https://c.example","sites":[{"id":"h","kind":"host","token_file":"`+open+`"}]}`, 0o600)); err == nil {
 		t.Error("lesbare token_file akzeptiert")
 	}
 }
@@ -48,21 +48,21 @@ func TestTokenFile(t *testing.T) {
 func TestLoadRejects(t *testing.T) {
 	cases := map[string]string{
 		"Rechte":          "",
-		"unbekannter Key": `{"cockpit":"https://c.example","sites":[{"id":"h","kind":"host","token":"t","tokn":"x"}]}`,
-		"http":            `{"cockpit":"http://c.example","sites":[{"id":"h","kind":"host","token":"t"}]}`,
-		"Intervall":       `{"cockpit":"https://c.example","interval":"1s","sites":[{"id":"h","kind":"host","token":"t"}]}`,
-		"keine Sites":     `{"cockpit":"https://c.example","sites":[]}`,
-		"doppelt":         `{"cockpit":"https://c.example","sites":[{"id":"h","kind":"host","token":"t"},{"id":"h","kind":"host","token":"t"}]}`,
-		"ID":              `{"cockpit":"https://c.example","sites":[{"id":"../x","kind":"host","token":"t"}]}`,
-		"kind":            `{"cockpit":"https://c.example","sites":[{"id":"h","kind":"foo","token":"t"}]}`,
-		"path fehlt":      `{"cockpit":"https://c.example","sites":[{"id":"h","kind":"php","token":"t"}]}`,
-		"Token fehlt":     `{"cockpit":"https://c.example","sites":[{"id":"h","kind":"host"}]}`,
-		"relativer path":  `{"cockpit":"https://c.example","sites":[{"id":"h","kind":"php","path":"rel","token":"t"}]}`,
-		"relativer spool": `{"cockpit":"https://c.example","spool":"rel","sites":[{"id":"h","kind":"host","token":"t"}]}`,
-		"gleiches Token":  `{"cockpit":"https://c.example","sites":[{"id":"a","kind":"host","token":"t"},{"id":"b","kind":"host","token":" t "}]}`,
-		"Restdaten":       `{"cockpit":"https://c.example","sites":[{"id":"h","kind":"host","token":"t"}]} {}`,
-		"nginx true":      `{"cockpit":"https://c.example","sites":[{"id":"h","kind":"host","token":"t","nginx":true}]}`,
-		"env-Name":        `{"cockpit":"https://c.example","sites":[{"id":"h","kind":"host","token":"t","env":{"A=B":"x"}}]}`,
+		"unbekannter Key": `{"sitewatch":"https://c.example","sites":[{"id":"h","kind":"host","token":"t","tokn":"x"}]}`,
+		"http":            `{"sitewatch":"http://c.example","sites":[{"id":"h","kind":"host","token":"t"}]}`,
+		"Intervall":       `{"sitewatch":"https://c.example","interval":"1s","sites":[{"id":"h","kind":"host","token":"t"}]}`,
+		"keine Sites":     `{"sitewatch":"https://c.example","sites":[]}`,
+		"doppelt":         `{"sitewatch":"https://c.example","sites":[{"id":"h","kind":"host","token":"t"},{"id":"h","kind":"host","token":"t"}]}`,
+		"ID":              `{"sitewatch":"https://c.example","sites":[{"id":"../x","kind":"host","token":"t"}]}`,
+		"kind":            `{"sitewatch":"https://c.example","sites":[{"id":"h","kind":"foo","token":"t"}]}`,
+		"path fehlt":      `{"sitewatch":"https://c.example","sites":[{"id":"h","kind":"php","token":"t"}]}`,
+		"Token fehlt":     `{"sitewatch":"https://c.example","sites":[{"id":"h","kind":"host"}]}`,
+		"relativer path":  `{"sitewatch":"https://c.example","sites":[{"id":"h","kind":"php","path":"rel","token":"t"}]}`,
+		"relativer spool": `{"sitewatch":"https://c.example","spool":"rel","sites":[{"id":"h","kind":"host","token":"t"}]}`,
+		"gleiches Token":  `{"sitewatch":"https://c.example","sites":[{"id":"a","kind":"host","token":"t"},{"id":"b","kind":"host","token":" t "}]}`,
+		"Restdaten":       `{"sitewatch":"https://c.example","sites":[{"id":"h","kind":"host","token":"t"}]} {}`,
+		"nginx true":      `{"sitewatch":"https://c.example","sites":[{"id":"h","kind":"host","token":"t","nginx":true}]}`,
+		"env-Name":        `{"sitewatch":"https://c.example","sites":[{"id":"h","kind":"host","token":"t","env":{"A=B":"x"}}]}`,
 	}
 	for name, content := range cases {
 		mode := os.FileMode(0o600)
@@ -75,14 +75,14 @@ func TestLoadRejects(t *testing.T) {
 	}
 }
 
-func TestCheckCockpitURL(t *testing.T) {
+func TestCheckSitewatchURL(t *testing.T) {
 	for _, u := range []string{"https://c.example", "http://127.0.0.1:8099", "http://localhost"} {
-		if err := CheckCockpitURL(u); err != nil {
+		if err := CheckSitewatchURL(u); err != nil {
 			t.Errorf("%s: %v", u, err)
 		}
 	}
 	for _, u := range []string{"http://c.example", "http://localhost.evil.example", "ftp://x", "", "c.example"} {
-		if err := CheckCockpitURL(u); err == nil {
+		if err := CheckSitewatchURL(u); err == nil {
 			t.Errorf("%s akzeptiert", u)
 		}
 	}
@@ -105,7 +105,7 @@ func TestReadPrivateRejectsNonRegular(t *testing.T) {
 
 func TestIgnoreUpdates(t *testing.T) {
 	cfg := func(rules string) string {
-		return `{"cockpit":"https://c.example","sites":[{"id":"w","kind":"contao","path":"/srv/w","token":"t","ignore_updates":` + rules + `}]}`
+		return `{"sitewatch":"https://c.example","sites":[{"id":"w","kind":"contao","path":"/srv/w","token":"t","ignore_updates":` + rules + `}]}`
 	}
 	if c, err := Load(write(t, "ok.json", cfg(`["contao/*:6.*","a/b"]`), 0o600)); err != nil || len(c.Sites[0].IgnoreUpdates) != 2 {
 		t.Fatalf("%+v %v", c, err)
@@ -138,7 +138,7 @@ func TestRemoteValidate(t *testing.T) {
 		}
 	}
 	if (Remote{Sites: []Site{{ID: "a", Kind: "php", Path: "/etc"}}}).Validate(nil) != nil {
-		t.Error("ohne roots keine Verzeichnisprüfung (Cockpit kennt sie nicht)")
+		t.Error("ohne roots keine Verzeichnisprüfung (Sitewatch kennt sie nicht)")
 	}
 }
 

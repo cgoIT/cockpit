@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Cockpit – Übersicht</title>{{template "css"}}</head>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sitewatch – Übersicht</title>{{template "css"}}</head>
 <body>{{template "top" "overview"}}
 <main>
 <div class="tiles">
@@ -28,14 +28,14 @@
       <td><span class="badge {{.Level}}">{{.Icon}} {{.Label}}</span>{{if .Maintenance}}<span class="badge maint">Wartung</span>{{end}}</td>
     </tr>
     {{else}}
-    <tr><td colspan="7" class="muted">{{if .Filter.Active}}Keine Site passt zum Filter.{{else}}Noch keine Sites registriert. Token anlegen mit: cockpit token &lt;site-id&gt;{{end}}</td></tr>
+    <tr><td colspan="7" class="muted">{{if .Filter.Active}}Keine Site passt zum Filter.{{else}}Noch keine Sites registriert. Token anlegen mit: sitewatch token &lt;site-id&gt;{{end}}</td></tr>
     {{end}}
     </tbody>
   </table></div>
 </section>
 {{template "matrix" .Versions}}
 {{template "matrix" .Params}}
-</main></body></html>
+</main>{{template "foot"}}</body></html>
 {{define "matrix"}}
 <section class="card">
   <h2>{{.Title}}</h2>

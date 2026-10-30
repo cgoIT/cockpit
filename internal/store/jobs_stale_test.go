@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"cockpit/internal/jobs"
+	"sitewatch/internal/jobs"
 )
 
 // Ein laufender Auftrag darf nicht als verwaist gelten, solange sein Zeitlimit noch läuft.

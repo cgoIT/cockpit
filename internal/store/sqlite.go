@@ -14,7 +14,7 @@ import (
 
 	_ "modernc.org/sqlite"
 
-	"cockpit/internal/report"
+	"sitewatch/internal/report"
 )
 
 // SQLite ist der Store auf einer SQLite-Datei.

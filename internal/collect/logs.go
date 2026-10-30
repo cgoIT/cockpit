@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"cockpit/internal/report"
+	"sitewatch/internal/report"
 )
 
 // Monolog-Zeile: [2026-10-27T19:02:11.123456+01:00] request.CRITICAL: Nachricht {...} []

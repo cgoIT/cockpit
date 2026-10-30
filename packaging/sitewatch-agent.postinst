@@ -1,0 +1,7 @@
+#!/bin/sh
+set -e
+# Der Dienst wird nicht von selbst aktiviert (ohne bootstrap.json startet er nicht); bei einem Update läuft er neu an, wenn er lief.
+if [ "$1" = configure ] && [ -d /run/systemd/system ]; then
+	systemctl daemon-reload || true
+	[ -z "$2" ] || systemctl try-restart sitewatch-agent.service || true
+fi

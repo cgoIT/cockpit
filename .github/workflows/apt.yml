@@ -1,0 +1,65 @@
+name: apt-Repository
+
+# Baut die Debian-Pakete zu einem Release und veröffentlicht das signierte apt-Repository auf GitHub Pages.
+# Aufgerufen vom Release-Workflow; von Hand (Actions → apt-Repository → Run workflow) mit einem vorhandenen Tag, um neu zu veröffentlichen.
+on:
+  workflow_call:
+    inputs:
+      tag:
+        type: string
+        required: true
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Tag des Releases, z. B. v0.2.0
+        type: string
+        required: true
+
+permissions: {}
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  apt:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # .deb an das Release hängen
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
+          fetch-depth: 0
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Binaries und Pakete bauen
+        env:
+          TAG: ${{ inputs.tag }}
+        run: |
+          VERSION=${TAG#v}
+          VERSION=$VERSION TARGETS="linux/amd64 linux/arm64" scripts/build.sh
+          VERSION=$VERSION scripts/build-deb.sh
+      - name: Pakete an das Release hängen
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+        run: gh release upload "$TAG" dist/*.deb --clobber
+      - name: apt-Repository bauen und signieren
+        env:
+          APT_GPG_PRIVATE_KEY: ${{ secrets.APT_GPG_PRIVATE_KEY }}
+        run: |
+          test -n "$APT_GPG_PRIVATE_KEY" || { echo "Secret APT_GPG_PRIVATE_KEY fehlt (siehe README)"; exit 1; }
+          printf '%s\n' "$APT_GPG_PRIVATE_KEY" | gpg --batch --import
+          scripts/build-apt.sh
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: apt-site
+      - id: deploy
+        uses: actions/deploy-pages@v4

@@ -1,5 +1,5 @@
-// Package report definiert das Report-Format, das Agenten an das Cockpit senden.
-// Agent und Cockpit nutzen dieselben Typen, damit das Schema nur einmal existiert.
+// Package report definiert das Report-Format, das Agenten an Sitewatch senden.
+// Agent und Sitewatch nutzen dieselben Typen, damit das Schema nur einmal existiert.
 package report
 
 import (

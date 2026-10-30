@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"cockpit/internal/report"
+	"sitewatch/internal/report"
 )
 
 func TestDiskLevel(t *testing.T) {

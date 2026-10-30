@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
-	"cockpit/internal/report"
-	"cockpit/internal/status"
-	"cockpit/internal/store"
+	"sitewatch/internal/report"
+	"sitewatch/internal/status"
+	"sitewatch/internal/store"
 )
 
 func ip(n int) *int { return &n }

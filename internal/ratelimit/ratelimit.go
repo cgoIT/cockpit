@@ -12,7 +12,7 @@ import (
 )
 
 // Limiter erlaubt burst Anfragen sofort und danach eine je every.
-// shortcut: Zustand nur im Speicher und pro Prozess, bei mehreren Cockpit-Instanzen in den gemeinsamen Store verlagern.
+// shortcut: Zustand nur im Speicher und pro Prozess, bei mehreren Sitewatch-Instanzen in den gemeinsamen Store verlagern.
 type Limiter struct {
 	burst int
 	every time.Duration

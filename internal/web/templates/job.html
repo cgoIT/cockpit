@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Cockpit – Auftrag</title>{{template "css"}}
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sitewatch – Auftrag</title>{{template "css"}}
 {{if .Live}}<noscript><meta http-equiv="refresh" content="3"></noscript>{{end}}</head>
 <body>{{template "top" "jobs"}}
 <main>
@@ -40,4 +40,4 @@
   es.addEventListener('end', function () { es.close(); location.reload(); });
 })();
 </script>{{end}}
-</body></html>
+{{template "foot"}}</body></html>

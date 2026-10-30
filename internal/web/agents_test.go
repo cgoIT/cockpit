@@ -11,10 +11,10 @@ import (
 	"strings"
 	"testing"
 
-	"cockpit/internal/agents"
-	"cockpit/internal/auth"
-	"cockpit/internal/report"
-	"cockpit/internal/sign"
+	"sitewatch/internal/agents"
+	"sitewatch/internal/auth"
+	"sitewatch/internal/report"
+	"sitewatch/internal/sign"
 )
 
 func setupAgents(t *testing.T) (*Server, ed25519.PublicKey) {
@@ -108,7 +108,10 @@ func TestAgentFlow(t *testing.T) {
 		t.Error("Site fehlt in der Übersicht")
 	}
 	// Token erneuern: das alte ist sofort ungültig.
-	do(srv, "POST", "/agents/server1/rotate", url.Values{}, nil)
+	rw := do(srv, "POST", "/agents/server1/rotate", url.Values{"docker_php": {"1"}}, nil)
+	if b := rw.Body.String(); !strings.Contains(b, `"php": "/usr/share/sitewatch-agent/docker/php-in-docker"`) || strings.Contains(b, "composer-in-docker\"") {
+		t.Errorf("Block mit Wrapper nur für php erwartet: %s", b)
+	}
 	if w := post(srv, tok, rep("kunde")); w.Code != http.StatusUnauthorized {
 		t.Errorf("altes Token: %d", w.Code)
 	}
@@ -142,7 +145,7 @@ func TestSaveRejectsBrokenForm(t *testing.T) {
 	if a, _ := srv.Agents.Get("server1"); len(a.Config.Sites) != 1 {
 		t.Error("Konfiguration darf nicht geleert werden")
 	}
-	// Site mit eigenem Token (cockpit token) darf nicht zusätzlich einem Agenten gehören.
+	// Site mit eigenem Token (sitewatch token) darf nicht zusätzlich einem Agenten gehören.
 	if _, err := auth.Add(srv.TokensPath, "alt"); err != nil {
 		t.Fatal(err)
 	}
@@ -172,5 +175,14 @@ func TestSameOriginGuard(t *testing.T) {
 	}
 	if w := do(srv, "POST", "/agents", url.Values{"id": {"ok"}}, map[string]string{"Origin": "http://example.com", "Sec-Fetch-Site": "same-origin"}); w.Code != 200 {
 		t.Errorf("gleicher Origin: %d", w.Code)
+	}
+}
+
+func TestDockerTools(t *testing.T) {
+	r := httptest.NewRequest("POST", "/agents", strings.NewReader("docker_php=1&docker_nginx=1"))
+	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	got := dockerTools(r)
+	if len(got) != 2 || got[0]["Name"] != "php" || got[1]["Path"] != "/usr/share/sitewatch-agent/docker/nginx-in-docker" {
+		t.Fatalf("dockerTools = %v", got)
 	}
 }

@@ -3,7 +3,7 @@
   "packages": {
     ".": {
       "release-type": "go",
-      "package-name": "cockpit",
+      "package-name": "sitewatch",
       "bump-minor-pre-major": true,
       "include-v-in-tag": true,
       "include-component-in-tag": false

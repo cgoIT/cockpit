@@ -1,4 +1,4 @@
-// Package web enthält die HTTP-Handler des Cockpits: Empfang der Reports und die Oberfläche.
+// Package web enthält die HTTP-Handler von Sitewatch: Empfang der Reports und die Oberfläche.
 package web
 
 import (
@@ -14,11 +14,11 @@ import (
 	"sync"
 	"time"
 
-	"cockpit/internal/agents"
-	"cockpit/internal/auth"
-	"cockpit/internal/report"
-	"cockpit/internal/status"
-	"cockpit/internal/store"
+	"sitewatch/internal/agents"
+	"sitewatch/internal/auth"
+	"sitewatch/internal/report"
+	"sitewatch/internal/status"
+	"sitewatch/internal/store"
 )
 
 //go:embed templates/*.html
@@ -35,8 +35,10 @@ type Server struct {
 	// Agents und SignKey schalten die Fernkonfiguration der Agenten ein (Config-API und Seiten unter /agents); nil = aus.
 	Agents  *agents.Store
 	SignKey ed25519.PrivateKey
-	// PublicURL ist die Adresse des Cockpits für den Block der Agenten-Datei; leer = https://<Host der Anfrage>.
+	// PublicURL ist die Adresse von Sitewatch für den Block der Agenten-Datei; leer = https://<Host der Anfrage>.
 	PublicURL string
+	// Version erscheint in der Fußzeile (zusammen mit dem Git-Commit aus den Build-Informationen, falls vorhanden).
+	Version string
 	// Jobs und Who schalten die Aufträge ein (Seiten unter /jobs, Kanal für die Agenten). Who liefert den angemeldeten Benutzer
 	// ("" = niemand); ohne Login (Protect == nil) gibt es keine Seiten für Aufträge, weil die Freigabe eine Person braucht.
 	Jobs store.Jobs
@@ -54,6 +56,7 @@ type Server struct {
 func New(s store.Store, tokensPath string, cfg status.Config) *Server {
 	srv := &Server{Store: s, TokensPath: tokensPath, Status: cfg, Now: time.Now}
 	srv.tpl = template.Must(template.New("").Funcs(template.FuncMap{
+		"version":   srv.versionText,
 		"hasLogin":  func() bool { return srv.Protect != nil }, // Logout-Button nur mit Login
 		"hasAgents": func() bool { return srv.Agents != nil },
 		"hasJobs":   func() bool { return srv.jobsUI() },
@@ -88,6 +91,12 @@ func (s *Server) Handler() http.Handler {
 			mux.HandleFunc("POST /api/v1/agent/jobs/{id}/events", s.jobEvents)
 		}
 	}
+	// Manifest und Symbol ohne Login: Der Browser holt sie ohne Cookies, sonst ließe sich die Seite nicht installieren.
+	mux.HandleFunc("GET /manifest.webmanifest", manifest)
+	mux.HandleFunc("GET /icon.svg", icon)
+	for _, n := range []string{"icon-192.png", "icon-512.png", "apple-touch-icon.png"} {
+		mux.HandleFunc("GET /"+n, png(n))
+	}
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, _ *http.Request) { fmt.Fprintln(w, "ok") })
 	mux.Handle("/", uiHandler)
 	return securityHeaders(mux)
@@ -99,7 +108,7 @@ func securityHeaders(next http.Handler) http.Handler {
 		h.Set("X-Content-Type-Options", "nosniff")
 		h.Set("X-Frame-Options", "DENY")
 		h.Set("Referrer-Policy", "no-referrer")
-		h.Set("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'self'")
+		h.Set("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; img-src 'self'; manifest-src 'self'; base-uri 'none'; form-action 'self'")
 		next.ServeHTTP(w, r)
 	})
 }

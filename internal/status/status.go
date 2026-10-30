@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"cockpit/internal/report"
-	"cockpit/internal/store"
+	"sitewatch/internal/report"
+	"sitewatch/internal/store"
 )
 
 type Level int
@@ -70,7 +70,7 @@ type Result struct {
 	Reasons []string
 }
 
-// Evaluate bewertet den letzten Report einer Site. receivedAt ist der Eingangszeitpunkt im Cockpit.
+// Evaluate bewertet den letzten Report einer Site. receivedAt ist der Eingangszeitpunkt in Sitewatch.
 func Evaluate(r *report.Report, receivedAt, now time.Time, cfg Config) Result {
 	var res Result
 	raise := func(l Level, format string, a ...any) {

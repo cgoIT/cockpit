@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Cockpit – Agent {{.Agent.ID}}</title>{{template "css"}}</head>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sitewatch – Agent {{.Agent.ID}}</title>{{template "css"}}</head>
 <body>{{template "top" "agents"}}
 <main>
 <div><a href="/agents" style="font-size:13px;text-decoration:none">← Alle Agenten</a>
@@ -42,7 +42,7 @@
   <p class="muted" style="font-size:13px">Gespeicherter Stand, nicht die Eingaben im Formular oben. Der Agent bekommt dies signiert, mit Agent <span class="mono">{{.Agent.ID}}</span>, ausgestellt bei jedem Abruf (jetzt: {{fmtTime .Now}}) und gültig {{.TTLDays}} Tage (bis {{fmtDate .Expires}}). Token, Programme, <span class="mono">roots</span> und <span class="mono">state</span> stehen nur in der lokalen <span class="mono">bootstrap.json</span> und sind hier nicht enthalten.</p>
 </div></section>
 <section class="card"><h2>Token und Löschen</h2><div class="pad" style="display:flex;gap:12px;flex-wrap:wrap">
-  <form method="post" action="/agents/{{.Agent.ID}}/rotate"><button class="btn" type="submit">Token erneuern (das alte wird ungültig)</button></form>
+  <form method="post" action="/agents/{{.Agent.ID}}/rotate"><fieldset style="border:0;padding:0;margin:8px 0"><legend class="muted" style="font-size:13px">Läuft in Docker (Wrapper-Skript aus dem Paket wird eingetragen, sonst direkt auf dem Host):</legend><label style="margin-right:14px"><input type="checkbox" name="docker_composer" value="1" checked> composer</label><label style="margin-right:14px"><input type="checkbox" name="docker_php" value="1" checked> php</label><label style="margin-right:14px"><input type="checkbox" name="docker_nginx" value="1" checked> nginx</label><label style="margin-right:14px"><input type="checkbox" name="docker_mariadb" value="1" checked> mariadb</label></fieldset><button class="btn" type="submit">Token erneuern (das alte wird ungültig)</button></form>
   <form method="post" action="/agents/{{.Agent.ID}}/delete"><label class="chk"><input type="checkbox" name="confirm" value="1" required> Löschen bestätigen</label> <button class="btn danger" type="submit">Agent löschen</button></form>
 </div></section>
-</main></body></html>
+</main>{{template "foot"}}</body></html>

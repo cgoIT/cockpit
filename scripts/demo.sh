@@ -1,10 +1,10 @@
 #!/bin/bash
-# Startet das Cockpit lokal und lässt Beispiel-Agenten gegen eine Demo-Umgebung laufen.
+# Startet Sitewatch lokal und lässt Beispiel-Agenten gegen eine Demo-Umgebung laufen.
 # Alle Namen, Domains und Zahlen sind Beispieldaten. composer ist durch einen Stub ersetzt.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 ROOT=$(pwd)
-DEMO=${DEMO_DIR:-/tmp/cockpit-demo}
+DEMO=${DEMO_DIR:-/tmp/sitewatch-demo}
 PORT=${PORT:-8099}
 rm -rf "$DEMO"; mkdir -p "$DEMO/sites" "$DEMO/bin"
 go build -o "$DEMO/bin/" ./cmd/...
@@ -63,18 +63,18 @@ mkdir -p "$DEMO/sites/seite-f"
 
 TOK="$DEMO/tokens.json"
 for s in eigene-seite-a kunde-b kunde-c seite-f kunde-h; do
-  "$DEMO/bin/cockpit" token -tokens "$TOK" "$s" > "$DEMO/token-$s" 2>/dev/null
+  "$DEMO/bin/sitewatch" token -tokens "$TOK" "$s" > "$DEMO/token-$s" 2>/dev/null
 done
 
 # -no-login: nur für die Demo, nie produktiv
-"$DEMO/bin/cockpit" serve -no-login -addr "127.0.0.1:$PORT" -data "$DEMO/data" -tokens "$TOK" > "$DEMO/cockpit.log" 2>&1 &
-echo $! > "$DEMO/cockpit.pid"
+"$DEMO/bin/sitewatch" serve -no-login -addr "127.0.0.1:$PORT" -data "$DEMO/data" -tokens "$TOK" > "$DEMO/sitewatch.log" 2>&1 &
+echo $! > "$DEMO/sitewatch.pid"
 for _ in $(seq 1 50); do curl -fs "http://127.0.0.1:$PORT/healthz" >/dev/null 2>&1 && break; sleep 0.1; done
 
 run() { # id name kind url [weitere agent-flags]
   local id=$1 name=$2 kind=$3 url=$4; shift 4
   "$DEMO/bin/agent" -once -site-id "$id" -name "$name" -kind "$kind" -url "$url" -path "$DEMO/sites/$id" \
-    -cockpit "http://127.0.0.1:$PORT" -token "$(cat "$DEMO/token-$id")" -composer "$ROOT/testdata/bin/composer" "$@"
+    -sitewatch "http://127.0.0.1:$PORT" -token "$(cat "$DEMO/token-$id")" -composer "$ROOT/testdata/bin/composer" "$@"
 }
 run eigene-seite-a "Eigene Seite A" contao https://seite-a.example
 run kunde-b        "Kunde B"        contao https://kunde-b.example
@@ -82,4 +82,4 @@ run kunde-c        "Kunde C"        contao https://kunde-c.example
 run seite-f        "Einfache PHP-Seite F" php https://seite-f.example -php "$ROOT/testdata/bin/php-8.1"
 # kunde-h ist registriert, hat aber nie gemeldet
 
-echo "Cockpit: http://127.0.0.1:$PORT   (beenden: kill \$(cat $DEMO/cockpit.pid))"
+echo "Sitewatch: http://127.0.0.1:$PORT   (beenden: kill \$(cat $DEMO/sitewatch.pid))"

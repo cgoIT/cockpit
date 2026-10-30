@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"cockpit/internal/report"
+	"sitewatch/internal/report"
 )
 
 var now = time.Date(2026, 10, 27, 19, 0, 0, 0, time.UTC)

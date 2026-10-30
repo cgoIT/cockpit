@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"cockpit/internal/report"
+	"sitewatch/internal/report"
 )
 
 func open(t *testing.T) *SQLite {
