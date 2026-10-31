@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.4.0](https://github.com/cgoIT/sitewatch/compare/v0.3.0...v0.4.0) (2026-10-31)
+
+
+### Features
+
+* Icons für die Art der Site (Host, PHP, Contao) in der Übersicht ([acfe140](https://github.com/cgoIT/sitewatch/commit/acfe140d125acf37a702f075b41d722118f511ea))
+* Mobile Darstellung, Tabellen als Karten auf schmalen Bildschirmen ([0557844](https://github.com/cgoIT/sitewatch/commit/0557844b4cd07bca15bab761cff1f7098dae37c5))
+* Site-Konfiguration in Gruppen gegliedert, Knopf „Alle gemeldeten wählen“ ([8a19cc4](https://github.com/cgoIT/sitewatch/commit/8a19cc42ecc503b73d1de82f639954ad722a7cf0))
+
+
+### Bug Fixes
+
+* pattern der ID-Felder gültig unter dem v-Flag von Chrome. ([8a19cc4](https://github.com/cgoIT/sitewatch/commit/8a19cc42ecc503b73d1de82f639954ad722a7cf0))
+
 ## [0.3.0](https://github.com/cgoIT/sitewatch/compare/v0.2.2...v0.3.0) (2026-10-31)
 
 
