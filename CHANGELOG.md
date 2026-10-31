@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.1](https://github.com/cgoIT/sitewatch/compare/v0.4.0...v0.4.1) (2026-10-31)
+
+
+### Bug Fixes
+
+* Mobile Darstellung, Verlaufsgrafiken passen auf die Breite, Fehlermeldungen brechen um ([e1ddeed](https://github.com/cgoIT/sitewatch/commit/e1ddeeda2785d98b58b0f64991f899fcf004f9b2))
+
 ## [0.4.0](https://github.com/cgoIT/sitewatch/compare/v0.3.0...v0.4.0) (2026-10-31)
 
 
