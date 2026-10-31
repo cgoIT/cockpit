@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/cgoIT/sitewatch/compare/v0.2.2...v0.3.0) (2026-10-31)
+
+
+### Features
+
+* Testmail für die Alarmierung (Knopf und alert-test) ([b0c2495](https://github.com/cgoIT/sitewatch/commit/b0c2495247b798170ce5ad7b9a51ad6cad08399d))
+
 ## [0.2.2](https://github.com/cgoIT/sitewatch/compare/v0.2.1...v0.2.2) (2026-10-30)
 
 
