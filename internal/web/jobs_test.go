@@ -381,8 +381,11 @@ func TestAgentPageSavesSiteActions(t *testing.T) {
 		t.Errorf("gespeichert: %q (Unbekanntes muss wegfallen)", got)
 	}
 	w := do(srv, "GET", "/agents/server1", nil, nil)
-	if !strings.Contains(w.Body.String(), `name="s0_act" value="site-status" checked> Site: Status`) || strings.Contains(w.Body.String(), `value="site-doctor" checked`) {
+	if !strings.Contains(w.Body.String(), `name="s0_act" value="site-status" data-rep checked>`) || strings.Contains(w.Body.String(), `value="site-doctor" checked`) {
 		t.Errorf("Formular zeigt die Auswahl falsch: %s", w.Body.String())
+	}
+	if csp := w.Header().Get("Content-Security-Policy"); !strings.Contains(csp, "script-src 'nonce-") || !strings.Contains(w.Body.String(), `<script nonce="`) {
+		t.Errorf("Agentenseite braucht Skript mit Nonce für „Alle gemeldeten wählen“: %q", csp)
 	}
 	// Ohne Aufträge (-no-login) zeigt das Formular keine Auswahl; Speichern darf die Freigaben nicht löschen.
 	srv.Who = nil

@@ -11,7 +11,7 @@
   </tbody></table></div>
 </section>
 <section class="card"><h2>Neuen Agenten anlegen</h2><div class="pad">
-  <form method="post" action="/agents" class="inline"><label class="f" style="max-width:360px">ID (a-z, 0-9, -)<input name="id" required pattern="[a-z0-9-]+"></label>
+  <form method="post" action="/agents" class="inline"><label class="f" style="max-width:360px">ID (a-z, 0-9, -)<input name="id" required pattern="[a-z0-9\-]+"></label>
   <fieldset style="border:0;padding:0;margin:8px 0"><legend class="muted" style="font-size:13px">Läuft in Docker (Wrapper-Skript aus dem Paket wird eingetragen, sonst direkt auf dem Host):</legend><label style="margin-right:14px"><input type="checkbox" name="docker_composer" value="1" checked> composer</label><label style="margin-right:14px"><input type="checkbox" name="docker_php" value="1" checked> php</label><label style="margin-right:14px"><input type="checkbox" name="docker_nginx" value="1" checked> nginx</label><label style="margin-right:14px"><input type="checkbox" name="docker_mariadb" value="1" checked> mariadb</label></fieldset>
   <p class="muted" style="font-size:13px">Danach wird das Token einmalig angezeigt, zusammen mit der lokalen Datei für den Agenten.</p>
   <button class="btn primary" type="submit">Anlegen</button></form>
