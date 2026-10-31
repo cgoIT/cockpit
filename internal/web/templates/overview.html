@@ -22,7 +22,7 @@
     <tbody>
     {{range .Rows}}
     <tr>
-      <td><a href="/sites/{{.ID}}" style="font-weight:500;text-decoration:none">{{.Name}}</a><div class="sub">{{.URL}}</div>
+      <td>{{template "kindicon" .Kind}}<a href="/sites/{{.ID}}" style="font-weight:500;text-decoration:none">{{.Name}}</a><div class="sub">{{.URL}}</div>
         {{if .Reasons}}<ul class="reasons">{{range .Reasons}}<li>{{.}}</li>{{end}}</ul>{{end}}</td>
       <td class="mono" data-label="Contao">{{.Contao}}</td><td class="mono" data-label="PHP">{{.PHP}}</td><td class="mono" data-label="Updates">{{.Updates}}{{with .UpdatesTrend}} <span class="tr {{.Class}}" title="{{.Title}}">{{.Text}}</span>{{end}}</td><td class="mono" data-label="Fehler 24 h">{{.Errors}}</td>
       <td data-label="Letzte Meldung">{{.Seen}}</td>

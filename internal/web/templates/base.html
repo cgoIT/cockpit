@@ -101,8 +101,11 @@ label.chk{flex-wrap:wrap;align-items:center}label.chk .muted{flex-basis:100%;pad
 h1{font-size:22px!important;overflow-wrap:anywhere}
 dl.kv dd{overflow-wrap:anywhere;text-align:right}
 }
+svg.ki{width:16px;height:16px;vertical-align:-3px;margin-right:6px;fill:none;stroke:var(--muted);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+svg.ko{width:18px;fill:var(--muted);stroke:none}
 </style>
 {{end}}
+{{define "kindicon"}}{{if eq . "host"}}<svg class="ki" viewBox="0 0 24 24" role="img" aria-label="Host"><title>Host</title><rect x="3" y="4" width="18" height="7" rx="1.5"/><rect x="3" y="13" width="18" height="7" rx="1.5"/><path d="M7 7.5h.01M7 16.5h.01"/></svg>{{else if eq . "php"}}<svg class="ki" viewBox="0 0 24 24" role="img" aria-label="PHP"><title>PHP</title><path d="m8 7-5 5 5 5M16 7l5 5-5 5"/></svg>{{else if eq . "contao"}}<svg class="ki ko" viewBox="0 0 179 156" role="img" aria-label="Contao"><title>Contao</title><path d="M15.88 94.55c5 23.26 9.16 45.41 23.73 61.35H11.82A11.81 11.81 0 0 1 .01 144.16V11.74A11.81 11.81 0 0 1 11.82-.05H31.9a76.8 76.8 0 0 0-12.78 15.1c-15.89 24.35-9.36 50.9-3.24 79.5zM166.77-.05h-31.51c7.46 7.46 13.75 17.12 18.5 29.13l-47.9 10.11c-5.25-10.06-13.23-18.43-28.84-15.14-8.61 1.82-14.32 6.65-16.85 11.94-3.11 6.52-4.64 13.83 2.8 48.57s11.82 40.8 17.32 45.5c4.47 3.8 11.68 5.91 20.29 4.09 15.62-3.29 19.47-14.16 20.15-25.47l47.9-10.12c1.13 24.78-6.54 44-20.08 57.29h18.22a11.81 11.81 0 0 0 11.82-11.74V11.74A11.81 11.81 0 0 0 166.77-.05z"/></svg>{{end}}{{end}}
 {{define "top"}}
 <header class="top"><div class="brand"><img src="/icon.svg" alt="" width="28" height="28">Sitewatch</div><nav><a href="/"{{if eq . "overview"}} class="on"{{end}}>Übersicht</a>{{if hasAgents}}<a href="/agents"{{if eq . "agents"}} class="on"{{end}}>Agenten</a>{{end}}{{if hasJobs}}<a href="/jobs"{{if eq . "jobs"}} class="on"{{end}}>Aufträge</a>{{end}}</nav>{{if hasLogin}}<form method="post" action="/logout" class="logout"><button type="submit">Abmelden</button></form>{{end}}</header>
 {{end}}
