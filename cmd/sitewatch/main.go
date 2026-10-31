@@ -1,6 +1,7 @@
 // Sitewatch nimmt Reports der Agenten entgegen und zeigt den Zustand aller Sites.
 //
 //	sitewatch serve [-addr :8080] [-data ./data] [-tokens ./tokens.json] [-allow-group g] [-allow-sub s] [-allow-email e] [-trusted-proxy ip,cidr] [-no-login] [-alert-to a,b -alert-from x -alert-smtp host:port]
+//	sitewatch alert-test -alert-to a,b -alert-from x -alert-smtp host:port
 //	sitewatch pubkey [-data ./data]
 //	sitewatch version
 //	sitewatch token [-tokens ./tokens.json] [-kind contao|php|host] [-name n] [-url u] [-path p] [-rotate | -remove] <site-id>
@@ -54,8 +55,10 @@ func main() {
 		token(args)
 	case "pubkey":
 		pubkey(args)
+	case "alert-test":
+		alertTest(args)
 	default:
-		fmt.Fprintln(os.Stderr, "Verwendung: sitewatch serve | sitewatch token <site-id> | sitewatch pubkey | sitewatch version")
+		fmt.Fprintln(os.Stderr, "Verwendung: sitewatch serve | sitewatch token <site-id> | sitewatch pubkey | sitewatch alert-test | sitewatch version")
 		os.Exit(2)
 	}
 }
@@ -122,18 +125,20 @@ func serve(args []string) {
 		cfg.EOL = ep
 		go ep.Run(context.Background(), 24*time.Hour)
 	}
+	var testMail func() error
 	if to := split(*alertTo); len(to) > 0 {
 		if *alertFrom == "" || !strings.Contains(*alertSMTP, ":") {
 			log.Fatal("-alert-to braucht -alert-from und -alert-smtp als host:port")
 		}
-		w := &alert.Watcher{Store: st, Config: cfg, Now: time.Now,
-			State: st, Send: alert.SMTP(*alertSMTP, os.Getenv("SITEWATCH_SMTP_USER"), os.Getenv("SITEWATCH_SMTP_PASSWORD"), *alertFrom, to)}
+		send := alert.SMTP(*alertSMTP, os.Getenv("SITEWATCH_SMTP_USER"), os.Getenv("SITEWATCH_SMTP_PASSWORD"), *alertFrom, to)
+		w := &alert.Watcher{Store: st, Config: cfg, Now: time.Now, State: st, Send: send}
 		go w.Run(context.Background(), *alertEvery)
+		testMail = func() error { return send(testSubject, testBody) }
 	} else {
 		log.Print("Hinweis: keine Alarmierung (-alert-to nicht gesetzt)")
 	}
 	srv := web.New(st, *tokens, cfg)
-	srv.Version = version
+	srv.Version, srv.TestMail = version, testMail
 	if srv.SignKey, err = sign.LoadOrCreateKey(*signKey); err != nil {
 		log.Fatalf("-signing-key: %v", err)
 	}
@@ -352,4 +357,26 @@ func accessLog(next http.Handler, px []netip.Prefix) http.Handler {
 		next.ServeHTTP(sw, r)
 		log.Printf("http: %s %s -> %d (%s) von %s", r.Method, r.URL.Path, sw.code, time.Since(start).Round(time.Millisecond), ratelimit.ClientIP(r, px))
 	})
+}
+
+const (
+	testSubject = "Sitewatch: Testmail"
+	testBody    = "Dies ist eine Testmail von Sitewatch. Die Alarmierung per E-Mail funktioniert.\n"
+)
+
+// alertTest schickt eine Testmail mit denselben Angaben wie serve (-alert-to/-from/-smtp, Zugang über SITEWATCH_SMTP_USER/_PASSWORD).
+func alertTest(args []string) {
+	fs := flag.NewFlagSet("alert-test", flag.ExitOnError)
+	to := fs.String("alert-to", "", "Empfänger (kommagetrennt)")
+	from := fs.String("alert-from", "", "Absender")
+	smtpAddr := fs.String("alert-smtp", "localhost:25", "SMTP-Server host:port")
+	fs.Parse(args)
+	rcpt := split(*to)
+	if len(rcpt) == 0 || *from == "" || !strings.Contains(*smtpAddr, ":") {
+		log.Fatal("alert-test braucht -alert-to, -alert-from und -alert-smtp als host:port")
+	}
+	if err := alert.SMTP(*smtpAddr, os.Getenv("SITEWATCH_SMTP_USER"), os.Getenv("SITEWATCH_SMTP_PASSWORD"), *from, rcpt)(testSubject, testBody); err != nil {
+		log.Fatalf("Testmail fehlgeschlagen: %v", err)
+	}
+	fmt.Println("Testmail an", strings.Join(rcpt, ", "), "versendet")
 }

@@ -63,6 +63,8 @@ Dann `systemctl enable --now sitewatch`. Der Dienst lauscht auf `127.0.0.1:8080`
   ohne `signing.key` müssten alle Agenten den neuen öffentlichen Schlüssel erhalten. Die Datenbank sichert man mit
   `sqlite3 sitewatch.db ".backup ziel.db"`.
 - **Alarm per E-Mail:** `-alert-to`, `-alert-from`, `-alert-smtp`; Zugang über `SITEWATCH_SMTP_USER` und `SITEWATCH_SMTP_PASSWORD`.
+  Mit gesetztem `-alert-to` erscheint in der Fußzeile der Knopf „Testmail senden"; ohne Oberfläche geht es mit
+  `sitewatch alert-test -alert-to … -alert-from … -alert-smtp …` (Zugang wieder über die beiden Umgebungsvariablen).
 - **Schwellwerte** (Standardwerte, alle optional): `sitewatch serve -thresholds schwellen.json`. Fehlende Felder behalten den
   Standard, unbekannte Felder oder Werte unter 1 lassen den Start scheitern.
 

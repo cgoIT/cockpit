@@ -39,6 +39,8 @@ type Server struct {
 	PublicURL string
 	// Version erscheint in der Fußzeile (zusammen mit dem Git-Commit aus den Build-Informationen, falls vorhanden).
 	Version string
+	// TestMail verschickt eine Testmail über die eingestellte Alarmierung; nil = nicht eingerichtet (kein Knopf).
+	TestMail func() error
 	// Jobs und Who schalten die Aufträge ein (Seiten unter /jobs, Kanal für die Agenten). Who liefert den angemeldeten Benutzer
 	// ("" = niemand); ohne Login (Protect == nil) gibt es keine Seiten für Aufträge, weil die Freigabe eine Person braucht.
 	Jobs store.Jobs
@@ -49,6 +51,9 @@ type Server struct {
 	ann   map[string]announce
 	tpl   *template.Template
 
+	mailMu sync.Mutex
+	mailAt time.Time
+
 	fetchMu sync.Mutex
 	fetched map[string]time.Time // wann der Agent die Konfiguration zuletzt abgeholt hat (nur im Speicher)
 }
@@ -56,13 +61,14 @@ type Server struct {
 func New(s store.Store, tokensPath string, cfg status.Config) *Server {
 	srv := &Server{Store: s, TokensPath: tokensPath, Status: cfg, Now: time.Now}
 	srv.tpl = template.Must(template.New("").Funcs(template.FuncMap{
-		"version":   srv.versionText,
-		"hasLogin":  func() bool { return srv.Protect != nil }, // Logout-Button nur mit Login
-		"hasAgents": func() bool { return srv.Agents != nil },
-		"hasJobs":   func() bool { return srv.jobsUI() },
-		"kinds":     func() []string { return []string{"contao", "php", "host"} },
-		"fmtDate":   func(t time.Time) string { return t.Local().Format("02.01.2006") },
-		"fmtTime":   func(t time.Time) string { return t.Local().Format("02.01. 15:04") },
+		"version":     srv.versionText,
+		"hasTestMail": func() bool { return srv.TestMail != nil },
+		"hasLogin":    func() bool { return srv.Protect != nil }, // Logout-Button nur mit Login
+		"hasAgents":   func() bool { return srv.Agents != nil },
+		"hasJobs":     func() bool { return srv.jobsUI() },
+		"kinds":       func() []string { return []string{"contao", "php", "host"} },
+		"fmtDate":     func(t time.Time) string { return t.Local().Format("02.01.2006") },
+		"fmtTime":     func(t time.Time) string { return t.Local().Format("02.01. 15:04") },
 	}).ParseFS(templateFS, "templates/*.html"))
 	return srv
 }
@@ -71,6 +77,9 @@ func (s *Server) Handler() http.Handler {
 	ui := http.NewServeMux()
 	ui.HandleFunc("GET /{$}", s.overview)
 	ui.HandleFunc("GET /sites/{id}", s.detail)
+	if s.TestMail != nil {
+		ui.HandleFunc("POST /alert-test", s.testMail)
+	}
 	if s.Agents != nil {
 		s.agentRoutes(ui)
 	}
@@ -277,7 +286,7 @@ func (s *Server) overview(w http.ResponseWriter, r *http.Request) {
 		}
 		m.Rows = kept
 	}
-	s.render(w, "overview.html", map[string]any{"Rows": rows, "Tiles": t, "Versions": versions, "Params": params, "Now": s.Now().Local().Format("02.01.2006 15:04"), "Filter": f})
+	s.render(w, "overview.html", map[string]any{"Rows": rows, "Tiles": t, "Versions": versions, "Params": params, "Now": s.Now().Local().Format("02.01.2006 15:04"), "Filter": f, "Mail": r.URL.Query().Get("mail")})
 }
 
 // filter schränkt die Übersicht ein (GET-Formular, ohne JavaScript). Die Kacheln oben zählen immer alle Sites.
@@ -430,4 +439,22 @@ func (s *Server) render(w http.ResponseWriter, name string, data any) {
 	if err := s.tpl.ExecuteTemplate(w, name, data); err != nil {
 		log.Printf("render %s: %v", name, err)
 	}
+}
+
+// testMail verschickt eine Testmail und kehrt mit einer festen Meldung zur Übersicht zurück (Fehlertext nur im Log).
+func (s *Server) testMail(w http.ResponseWriter, r *http.Request) {
+	s.mailMu.Lock()
+	tooSoon := s.Now().Sub(s.mailAt) < 10*time.Second // gegen Dauerklicken
+	if !tooSoon {
+		s.mailAt = s.Now()
+	}
+	s.mailMu.Unlock()
+	res := "ok"
+	if tooSoon {
+		res = "wait"
+	} else if err := s.TestMail(); err != nil {
+		log.Printf("Testmail fehlgeschlagen: %v", err)
+		res = "fail"
+	}
+	http.Redirect(w, r, "/?mail="+res, http.StatusSeeOther)
 }

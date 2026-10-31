@@ -72,6 +72,7 @@ table.matrix{min-width:0}
 td.cell,table.matrix th:not(:first-child){text-align:center}
 td.cell.warn{background:#FBEFD2;color:#6B4600}
 td.cell.crit{background:#FBE4E2;color:#8F1C16}
+button.linkbtn{font:inherit;font-size:12px;border:0;background:none;color:var(--accent);cursor:pointer;padding:0;text-decoration:underline}
 footer.foot{max-width:1360px;margin:0 auto;padding:0 32px 24px;color:var(--muted);font-size:12px}
 </style>
 {{end}}
@@ -79,5 +80,5 @@ footer.foot{max-width:1360px;margin:0 auto;padding:0 32px 24px;color:var(--muted
 <header class="top"><div class="brand"><img src="/icon.svg" alt="" width="28" height="28">Sitewatch</div><nav><a href="/"{{if eq . "overview"}} class="on"{{end}}>Übersicht</a>{{if hasAgents}}<a href="/agents"{{if eq . "agents"}} class="on"{{end}}>Agenten</a>{{end}}{{if hasJobs}}<a href="/jobs"{{if eq . "jobs"}} class="on"{{end}}>Aufträge</a>{{end}}</nav>{{if hasLogin}}<form method="post" action="/logout" class="logout"><button type="submit">Abmelden</button></form>{{end}}</header>
 {{end}}
 {{define "foot"}}
-<footer class="foot">Sitewatch {{version}}</footer>
+<footer class="foot">Sitewatch {{version}}{{if hasTestMail}} · <form method="post" action="/alert-test" style="display:inline"><button type="submit" class="linkbtn">Testmail senden</button></form>{{end}}</footer>
 {{end}}

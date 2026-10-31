@@ -36,3 +36,27 @@ func TestManifestOhneLoginUndFusszeile(t *testing.T) {
 		t.Errorf("versionText = %q", v)
 	}
 }
+
+func TestTestMail(t *testing.T) {
+	srv, _ := setupAgents(t)
+	n := 0
+	srv.TestMail = func() error { n++; return nil }
+	h := srv.Handler()
+	get := func(m, p string) *httptest.ResponseRecorder {
+		w := httptest.NewRecorder()
+		h.ServeHTTP(w, httptest.NewRequest(m, p, nil))
+		return w
+	}
+	if b := get("GET", "/").Body.String(); !strings.Contains(b, "Testmail senden") {
+		t.Error("Knopf fehlt")
+	}
+	if w := get("POST", "/alert-test"); w.Code != http.StatusSeeOther || w.Header().Get("Location") != "/?mail=ok" || n != 1 {
+		t.Errorf("erster Versand: %d %s n=%d", w.Code, w.Header().Get("Location"), n)
+	}
+	if w := get("POST", "/alert-test"); w.Header().Get("Location") != "/?mail=wait" || n != 1 {
+		t.Errorf("zweiter Versand sofort: %s n=%d", w.Header().Get("Location"), n)
+	}
+	if b := get("GET", "/?mail=ok").Body.String(); !strings.Contains(b, "Testmail wurde versendet") {
+		t.Error("Meldung fehlt")
+	}
+}

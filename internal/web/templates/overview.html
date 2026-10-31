@@ -2,6 +2,7 @@
 <html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sitewatch – Übersicht</title>{{template "css"}}</head>
 <body>{{template "top" "overview"}}
 <main>
+{{if eq .Mail "ok"}}<div class="banner" style="background:#E4F3EA;border-color:#14612F;color:#14612F">Testmail wurde versendet. Prüfe das Postfach der Alarm-Empfänger.</div>{{else if eq .Mail "fail"}}<div class="banner">Die Testmail ist fehlgeschlagen. Der Grund steht im Log von Sitewatch (journalctl -u sitewatch).</div>{{else if eq .Mail "wait"}}<div class="banner">Bitte einen Moment warten, die letzte Testmail ist gerade erst rausgegangen.</div>{{end}}
 <div class="tiles">
   <div class="tile"><div class="k">Sites überwacht</div><div class="v">{{.Tiles.Total}}</div><div class="s">davon {{.Tiles.Contao}} Contao, {{.Tiles.PHP}} reines PHP</div></div>
   <div class="tile crit"><div class="k" style="color:#B3261E;font-weight:500">■ Kritisch</div><div class="v">{{.Tiles.Crit}}</div><div class="s">Sicherheitslücke oder keine Meldung</div></div>
