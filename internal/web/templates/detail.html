@@ -69,7 +69,7 @@
       </tbody></table></div></details></section>{{end}}
     <section class="card"><h2>Letzte Fehler <span class="muted" style="font-weight:400">· gruppiert, neueste zuerst</span></h2>
       <div class="scroll"><table><thead><tr><th>Zeit</th><th>Level</th><th>Meldung</th><th>Anzahl</th></tr></thead><tbody>
-      {{range .R.Errors}}<tr><td class="mono" data-label="Zeit">{{fmtTime .Time}}</td><td style="font-weight:500" data-label="Level">{{.Level}}</td><td class="mono" style="font-size:13px;overflow-wrap:anywhere" data-label="Meldung">{{.Message}}</td><td class="mono" data-label="Anzahl">{{.Count}}×</td></tr>
+      {{range .R.Errors}}<tr><td class="mono" data-label="Zeit">{{fmtTime .Time}}</td><td style="font-weight:500" data-label="Level">{{.Level}}</td><td class="mono msg" style="font-size:13px" data-label="Meldung">{{.Message}}</td><td class="mono" data-label="Anzahl">{{.Count}}×</td></tr>
       {{else}}<tr><td colspan="4" class="muted">Keine Fehler im Zeitfenster.</td></tr>{{end}}
       </tbody></table></div></section>
   </div>

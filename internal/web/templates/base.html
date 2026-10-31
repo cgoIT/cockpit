@@ -93,7 +93,8 @@ td{border:0;padding:4px 16px;display:flex;flex-wrap:wrap;justify-content:space-b
 td::before{content:attr(data-label);color:var(--muted);text-align:left}
 td:not([data-label]){display:block;text-align:left}td:not([data-label])::before{content:none}
 td.cell{text-align:right}
-.charts{grid-template-columns:1fr}
+.charts{grid-template-columns:minmax(0,1fr)}.chart{min-width:0}
+td.msg{display:block;text-align:left;white-space:normal;overflow-wrap:anywhere;font-size:12px!important}td.msg::before{display:block}
 .fgrid{grid-template-columns:1fr}
 input:not([type=checkbox]),select,textarea,.btn,form.hist button{font-size:16px!important;min-height:40px}
 input[type=checkbox]{width:18px;height:18px;margin:0;flex:none}
