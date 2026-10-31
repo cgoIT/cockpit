@@ -53,23 +53,23 @@
     {{if .R.Site.Problems}}<section class="card"><h2>Nicht ermittelt</h2><div class="pad"><ul class="reasons" style="margin:0">{{range .R.Site.Problems}}<li>{{.}}</li>{{end}}</ul></div></section>{{end}}
     <section class="card"><h2>Verlauf</h2><div class="scroll"><table style="min-width:0">
       <thead><tr><th>Erstellt</th><th>Updates</th><th>Fehler</th></tr></thead><tbody>
-      {{range .History}}<tr><td class="mono">{{fmtTime .At}}</td><td class="mono">{{.OpenUpdates}}</td><td class="mono">{{.Errors}}</td></tr>{{end}}
+      {{range .History}}<tr><td class="mono" data-label="Erstellt">{{fmtTime .At}}</td><td class="mono" data-label="Updates">{{.OpenUpdates}}</td><td class="mono" data-label="Fehler">{{.Errors}}</td></tr>{{end}}
       </tbody></table></div></section>
   </div>
   <div class="col-b">
     <section class="card"><h2>Pakete mit Updates <span class="muted" style="font-weight:400">· {{.OpenUpdates}} offen von {{.R.Site.PackagesTotal}}</span></h2>
       <div class="scroll"><table><thead><tr><th>Paket</th><th>Installiert</th><th>Verfügbar</th><th>Hinweis</th></tr></thead><tbody>
-      {{range .Packages}}<tr><td class="mono">{{.Name}}</td><td class="mono">{{.Installed}}</td><td class="mono">{{.Latest}}</td>
-        <td><span class="badge {{.Class}}">{{.Label}}</span>{{if .Abandoned}} <span class="badge warn">▲ aufgegeben</span>{{end}}</td></tr>
+      {{range .Packages}}<tr><td class="mono" data-label="Paket">{{.Name}}</td><td class="mono" data-label="Installiert">{{.Installed}}</td><td class="mono" data-label="Verfügbar">{{.Latest}}</td>
+        <td data-label="Hinweis"><span class="badge {{.Class}}">{{.Label}}</span>{{if .Abandoned}} <span class="badge warn">▲ aufgegeben</span>{{end}}</td></tr>
       {{else}}<tr><td colspan="4" class="muted">Keine offenen Updates.</td></tr>{{end}}
       </tbody></table></div></section>
     {{if .Ignored}}<section class="card"><details><summary style="cursor:pointer;padding:16px 20px;font-size:16px;font-weight:600">Ausgeschlossene Updates <span class="muted" style="font-weight:400">· {{len .Ignored}}</span></summary>
       <div class="scroll"><table><thead><tr><th>Paket</th><th>Installiert</th><th>Verfügbar</th><th>Hinweis</th></tr></thead><tbody>
-      {{range .Ignored}}<tr><td class="mono">{{.Name}}</td><td class="mono">{{.Installed}}</td><td class="mono">{{.Latest}}</td><td><span class="badge off">{{.Label}}</span></td></tr>{{end}}
+      {{range .Ignored}}<tr><td class="mono" data-label="Paket">{{.Name}}</td><td class="mono" data-label="Installiert">{{.Installed}}</td><td class="mono" data-label="Verfügbar">{{.Latest}}</td><td data-label="Hinweis"><span class="badge off">{{.Label}}</span></td></tr>{{end}}
       </tbody></table></div></details></section>{{end}}
     <section class="card"><h2>Letzte Fehler <span class="muted" style="font-weight:400">· gruppiert, neueste zuerst</span></h2>
       <div class="scroll"><table><thead><tr><th>Zeit</th><th>Level</th><th>Meldung</th><th>Anzahl</th></tr></thead><tbody>
-      {{range .R.Errors}}<tr><td class="mono">{{fmtTime .Time}}</td><td style="font-weight:500">{{.Level}}</td><td class="mono" style="font-size:13px">{{.Message}}</td><td class="mono">{{.Count}}×</td></tr>
+      {{range .R.Errors}}<tr><td class="mono" data-label="Zeit">{{fmtTime .Time}}</td><td style="font-weight:500" data-label="Level">{{.Level}}</td><td class="mono" style="font-size:13px;overflow-wrap:anywhere" data-label="Meldung">{{.Message}}</td><td class="mono" data-label="Anzahl">{{.Count}}×</td></tr>
       {{else}}<tr><td colspan="4" class="muted">Keine Fehler im Zeitfenster.</td></tr>{{end}}
       </tbody></table></div></section>
   </div>

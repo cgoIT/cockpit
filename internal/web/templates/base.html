@@ -74,6 +74,33 @@ td.cell.warn{background:#FBEFD2;color:#6B4600}
 td.cell.crit{background:#FBE4E2;color:#8F1C16}
 button.linkbtn{font:inherit;font-size:12px;border:0;background:none;color:var(--accent);cursor:pointer;padding:0;text-decoration:underline}
 footer.foot{max-width:1360px;margin:0 auto;padding:0 32px 24px;color:var(--muted);font-size:12px}
+@media (max-width:640px){
+header.top{padding:10px 16px;gap:8px}
+header.top nav{order:3;width:100%;display:flex;overflow-x:auto}
+header.top nav a{padding:8px 12px;white-space:nowrap}
+main{padding:16px 16px 32px;gap:16px}
+footer.foot{padding:0 16px 24px}
+.tiles{grid-template-columns:1fr 1fr;gap:12px}
+.tile{padding:12px 14px}.tile.crit{padding:11px 13px}
+.tile .v{font-size:26px}
+section.card h2{padding:12px 16px}section.card .pad{padding:12px 16px}
+section.card h2 .ranges{float:none;display:block;margin-top:6px}.ranges a{margin:0 12px 0 0}
+table,table.matrix{min-width:0}
+thead{display:none}
+table,tbody,tr,td{display:block}
+tr{padding:6px 0;border-top:1px solid #E6E9ED}tbody tr:first-child{border-top:0}
+td{border:0;padding:4px 16px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px;text-align:right}
+td::before{content:attr(data-label);color:var(--muted);text-align:left}
+td:not([data-label]){display:block;text-align:left}td:not([data-label])::before{content:none}
+td.cell{text-align:right}
+.charts{grid-template-columns:1fr}
+.fgrid{grid-template-columns:1fr}
+input:not([type=checkbox]),select,textarea,.btn,form.hist button{font-size:16px!important;min-height:40px}
+input[type=checkbox]{width:18px;height:18px;margin:0;flex:none}
+label.chk{flex-wrap:wrap;align-items:center}label.chk .muted{flex-basis:100%;padding-left:24px;font-size:12px}
+h1{font-size:22px!important;overflow-wrap:anywhere}
+dl.kv dd{overflow-wrap:anywhere;text-align:right}
+}
 </style>
 {{end}}
 {{define "top"}}
