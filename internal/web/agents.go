@@ -228,11 +228,14 @@ func (s *Server) editPage(w http.ResponseWriter, a agents.Agent, cfg agentcfg.Re
 		forms = append(forms, s.toForm(i, st, a.ID))
 	}
 	forms = append(forms, siteForm{N: len(forms), Kind: "contao"}) // leere Zeile für eine neue Site
+	nonce := newJobID()
+	// Nur diese Seite führt ein Skript aus (Nonce): der Knopf „Gemeldete alle wählen“. Ohne JavaScript bleibt er verborgen.
+	w.Header().Set("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; img-src 'self'; manifest-src 'self'; script-src 'nonce-"+nonce+"'; base-uri 'none'; form-action 'self'")
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(code)
 	preview, _ := json.MarshalIndent(a.Config, "", "  ") // der gespeicherte Stand, nicht die ungespeicherten Eingaben
 	s.render(w, "agent.html", map[string]any{"Preview": string(preview), "TTLDays": int(sign.TTL.Hours() / 24), "Now": s.Now(), "Expires": s.Now().Add(sign.TTL), "Agent": a, "Interval": cfg.Interval, "Sites": forms, "Count": len(forms),
-		"Error": msg, "Fetched": s.fetchedText(a.ID), "Channel": s.channelText(a.ID)})
+		"Error": msg, "Fetched": s.fetchedText(a.ID), "Channel": s.channelText(a.ID), "Nonce": nonce})
 }
 
 func (s *Server) agentEdit(w http.ResponseWriter, r *http.Request) {

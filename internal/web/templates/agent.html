@@ -15,7 +15,7 @@
 <section class="card"><h2>Sites</h2><div class="pad">
 {{range .Sites}}<fieldset class="site"><legend>{{if .ID}}{{.ID}}{{else}}Neue Site (leer lassen = keine){{end}}</legend>
   <div class="fgrid">
-    <label class="f">ID<input name="s{{.N}}_id" value="{{.ID}}" pattern="[a-z0-9-]*"></label>
+    <label class="f">ID<input name="s{{.N}}_id" value="{{.ID}}" pattern="[a-z0-9\-]*"></label>
     <label class="f">Anzeigename<input name="s{{.N}}_name" value="{{.Name}}"></label>
     <label class="f">Art<select name="s{{.N}}_kind">{{$k := .Kind}}{{range $o := kinds}}<option{{if eq $o $k}} selected{{end}}>{{$o}}</option>{{end}}</select></label>
     <label class="f">URL<input name="s{{.N}}_url" value="{{.URL}}"></label>
@@ -25,14 +25,16 @@
     <label class="f">SITE_DIR (Docker-Wrapper)<input name="s{{.N}}_site_dir" value="{{.SiteDir}}"></label>
     <label class="f">Updates ausschließen (eine Regel je Zeile)<textarea name="s{{.N}}_ignore" rows="2">{{.Ignore}}</textarea></label>
   </div>
-  {{if .Actions}}{{$n := .N}}<div style="margin-top:10px"><div class="sub">Aufträge für diese Site (Freigabe; angeboten wird nur, was zusätzlich der Agent lokal erlaubt)</div>
-    <div style="display:flex;gap:6px 18px;flex-wrap:wrap;margin-top:4px">{{range .Actions}}<label class="chk"><input type="checkbox" name="s{{$n}}_act" value="{{.Name}}"{{if .On}} checked{{end}}> {{.Label}}{{if not .Reported}} <span class="muted">(nicht gemeldet)</span>{{end}}</label>{{end}}</div></div>{{end}}
-  <div style="margin-top:10px;display:flex;gap:18px;flex-wrap:wrap">
+  {{if .Actions}}{{$n := .N}}<div class="grp acts"><div class="gh"><strong>Aufträge</strong> <span class="muted">Freigabe für diese Site. Angeboten wird nur, was zusätzlich der Agent lokal erlaubt.</span> <button type="button" class="btn selrep" hidden>Alle gemeldeten wählen</button></div>
+    <div class="opts">{{range .Actions}}<label class="chk"><input type="checkbox" name="s{{$n}}_act" value="{{.Name}}"{{if .Reported}} data-rep{{end}}{{if .On}} checked{{end}}> <span>{{.Label}}{{if not .Reported}} <span class="muted">(nicht gemeldet)</span>{{end}}</span></label>{{end}}</div></div>{{end}}
+  <div class="grp"><div class="gh"><strong>Erfassung</strong> <span class="muted">Was der Agent für diese Site ermittelt.</span></div>
+    <div class="opts">
     <label class="chk"><input type="checkbox" name="s{{.N}}_host" value="1"{{if .Host}} checked{{end}}> Host-Infos mit erfassen</label>
     <label class="chk"><input type="checkbox" name="s{{.N}}_no_nginx" value="1"{{if .NoNginx}} checked{{end}}> hat keinen nginx</label>
     <label class="chk"><input type="checkbox" name="s{{.N}}_no_mariadb" value="1"{{if .NoMariaDB}} checked{{end}}> hat keine Datenbank</label>
-    {{if .ID}}<label class="chk"><input type="checkbox" name="s{{.N}}_delete" value="1"> Site entfernen</label>{{end}}
-  </div></fieldset>{{end}}
+    </div></div>
+  {{if .ID}}<div class="grp"><label class="chk"><input type="checkbox" name="s{{.N}}_delete" value="1"> Site entfernen</label></div>{{end}}
+</fieldset>{{end}}
   <button class="btn primary" type="submit">Speichern</button>
   <span class="muted" style="font-size:13px"> Der Agent übernimmt Änderungen beim nächsten Lauf. Zum Anlegen weiterer Sites speichern und die Seite neu öffnen.</span>
 </div></section>
@@ -45,4 +47,15 @@
   <form method="post" action="/agents/{{.Agent.ID}}/rotate"><fieldset style="border:0;padding:0;margin:8px 0"><legend class="muted" style="font-size:13px">Läuft in Docker (Wrapper-Skript aus dem Paket wird eingetragen, sonst direkt auf dem Host):</legend><label style="margin-right:14px"><input type="checkbox" name="docker_composer" value="1" checked> composer</label><label style="margin-right:14px"><input type="checkbox" name="docker_php" value="1" checked> php</label><label style="margin-right:14px"><input type="checkbox" name="docker_nginx" value="1" checked> nginx</label><label style="margin-right:14px"><input type="checkbox" name="docker_mariadb" value="1" checked> mariadb</label></fieldset><button class="btn" type="submit">Token erneuern (das alte wird ungültig)</button></form>
   <form method="post" action="/agents/{{.Agent.ID}}/delete"><label class="chk"><input type="checkbox" name="confirm" value="1" required> Löschen bestätigen</label> <button class="btn danger" type="submit">Agent löschen</button></form>
 </div></section>
-</main>{{template "foot"}}</body></html>
+</main>
+<script nonce="{{.Nonce}}">
+document.querySelectorAll('.selrep').forEach(function (b) {
+  b.hidden = false;
+  b.addEventListener('click', function () {
+    var c = b.closest('.acts').querySelectorAll('input[data-rep]');
+    var all = Array.prototype.every.call(c, function (i) { return i.checked; });
+    c.forEach(function (i) { i.checked = !all; });
+  });
+});
+</script>
+{{template "foot"}}</body></html>
